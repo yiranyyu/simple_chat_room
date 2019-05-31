@@ -39,7 +39,7 @@ public class Client {
     private PrintWriter writer;
     private BufferedReader reader;
     private MessageListenerThread messageListenerThread;// 负责接收消息的线程
-    private Map<String, User> onLineUsers = new HashMap<>();// 所有在线用户
+    private Map<String, User> onlineUsers = new HashMap<>();// 所有在线用户
 
     private Client() {
         initClientUI();
@@ -294,14 +294,13 @@ public class Client {
                             if ((username = msgTokenizer.nextToken()) != null
                                     && (userIp = msgTokenizer.nextToken()) != null) {
                                 user = new User(username, userIp);
-                                onLineUsers.put(username, user);
+                                onlineUsers.put(username, user);
                                 listModel.addElement(username);
                             }
                             break;
                         case "DELETE":
                             username = msgTokenizer.nextToken();
-                            user = onLineUsers.get(username);
-                            onLineUsers.remove(user);
+                            onlineUsers.remove(username);
                             listModel.removeElement(username);
                             break;
                         case "USERLIST":
@@ -310,7 +309,7 @@ public class Client {
                                 username = msgTokenizer.nextToken();
                                 userIp = msgTokenizer.nextToken();
                                 user = new User(username, userIp);
-                                onLineUsers.put(username, user);
+                                onlineUsers.put(username, user);
                                 listModel.addElement(username);
                             }
                             break;
@@ -318,7 +317,7 @@ public class Client {
                             textArea.append(msgTokenizer.nextToken() + msgTokenizer.nextToken() + "\r\n");
                             closeConnectionPassively();// 被动的关闭连接
                             JOptionPane.showMessageDialog(frame, "服务器缓冲区已满！", "错误", JOptionPane.ERROR_MESSAGE);
-                            return;// 结束线程
+                            return;
                         default:
                             textArea.append(message + "\r\n");
                     }

@@ -37,9 +37,9 @@ public class Server {
 
     private ServerSocket serverSocket;
     private ServerThread serverThread;
-    private ArrayList<SingleClientThread> clients;
+    private ArrayList<SingleClientThread> clientThreads;
 
-    public Server() {
+    private Server() {
         initServerUI();
         addListeners();
     }
@@ -120,7 +120,7 @@ public class Server {
         frame.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
                 if (isStart) {
-                    closeServer();
+                    stopServer();
                 }
                 System.exit(0);
             }
@@ -129,14 +129,14 @@ public class Server {
         // 文本框按回车键时事件
         txt_message.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                sendMessage();
+                sendServerMessageToAllUsers();
             }
         });
 
         // 单击发送按钮时事件
         btn_send.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent arg0) {
-                sendMessage();
+                sendServerMessageToAllUsers();
             }
         });
 
@@ -187,7 +187,7 @@ public class Server {
                     return;
                 }
                 try {
-                    closeServer();
+                    stopServer();
                     btn_start.setEnabled(true);
                     txt_max.setEnabled(true);
                     txt_port.setEnabled(true);
@@ -201,12 +201,12 @@ public class Server {
         });
     }
 
-    private void sendMessage() {
+    private void sendServerMessageToAllUsers() {
         if (!isStart) {
             JOptionPane.showMessageDialog(frame, "服务器还未启动,不能发送消息！", "错误", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        if (clients.size() == 0) {
+        if (clientThreads.size() == 0) {
             JOptionPane.showMessageDialog(frame, "没有用户在线,不能发送消息！", "错误", JOptionPane.ERROR_MESSAGE);
             return;
         }
@@ -215,14 +215,14 @@ public class Server {
             JOptionPane.showMessageDialog(frame, "消息不能为空！", "错误", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        sendServerMessage(message);// 群发服务器消息
+        sendServerMessageToAllUsersImpl(message);
         contentArea.append("服务器说：" + txt_message.getText() + "\r\n");
         txt_message.setText(null);
     }
 
     private void startServer(int max, int port) throws java.net.BindException {
         try {
-            clients = new ArrayList<>();
+            clientThreads = new ArrayList<>();
             serverSocket = new ServerSocket(port);
             serverThread = new ServerThread(serverSocket, max);
             serverThread.start();
@@ -238,23 +238,27 @@ public class Server {
     }
 
     @SuppressWarnings("deprecation")
-    private void closeServer() {
+    private void releaseClientResource(int i) throws IOException {
+        clientThreads.get(i).stop();
+        clientThreads.get(i).reader.close();
+        clientThreads.get(i).writer.close();
+        clientThreads.get(i).socket.close();
+        clientThreads.remove(i);
+    }
+
+    @SuppressWarnings("deprecation")
+    private void stopServer() {
         try {
             if (serverThread != null) {
-                serverThread.stop();// 停止服务器线程
+                serverThread.stop();
+            }
+            for (int i = clientThreads.size() - 1; i >= 0; i--) {
+                // 给所有在线用户发送关闭命令
+                clientThreads.get(i).getWriter().println("CLOSE");
+                clientThreads.get(i).getWriter().flush();
+                releaseClientResource(i);
             }
 
-            for (int i = clients.size() - 1; i >= 0; i--) {
-                // 给所有在线用户发送关闭命令
-                clients.get(i).getWriter().println("CLOSE");
-                clients.get(i).getWriter().flush();
-                // 释放资源
-                clients.get(i).stop();// 停止此条为客户端服务的线程
-                clients.get(i).reader.close();
-                clients.get(i).writer.close();
-                clients.get(i).socket.close();
-                clients.remove(i);
-            }
             if (serverSocket != null) {
                 serverSocket.close();// 关闭服务器端连接
             }
@@ -266,21 +270,21 @@ public class Server {
         }
     }
 
-    // 群发服务器消息
-    private void sendServerMessage(String message) {
-        for (int i = clients.size() - 1; i >= 0; i--) {
-            clients.get(i).getWriter().println("服务器：" + message + "(多人发送)");
-            clients.get(i).getWriter().flush();
+
+    private void sendServerMessageToAllUsersImpl(String message) {
+        for (int i = clientThreads.size() - 1; i >= 0; i--) {
+            clientThreads.get(i).getWriter().println("服务器：" + message + "(多人发送)");
+            clientThreads.get(i).getWriter().flush();
         }
     }
 
     class ServerThread extends Thread {
         private ServerSocket serverSocket;
-        private int max;// 人数上限
+        private int maxUserNumber;// 人数上限
 
-        ServerThread(ServerSocket serverSocket, int max) {
+        ServerThread(ServerSocket serverSocket, int maxUserNumber) {
             this.serverSocket = serverSocket;
-            this.max = max;
+            this.maxUserNumber = maxUserNumber;
         }
 
         public void run() {
@@ -288,8 +292,7 @@ public class Server {
                 try {
                     Socket socket = serverSocket.accept();
 
-                    // 如果已达人数上限
-                    if (clients.size() == max) {
+                    if (clientThreads.size() == maxUserNumber) {
                         BufferedReader r = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                         PrintWriter w = new PrintWriter(socket.getOutputStream());
 
@@ -310,7 +313,7 @@ public class Server {
                     }
                     SingleClientThread client = new SingleClientThread(socket);
                     client.start();// 开启对此客户端服务的线程
-                    clients.add(client);
+                    clientThreads.add(client);
                     listModel.addElement(client.getUser().getName());// 更新在线列表
                     contentArea.append(client.getUser().getName() + client.getUser().getIp() + "上线!\r\n");
                 } catch (IOException e) {
@@ -339,21 +342,21 @@ public class Server {
                 writer.println(user.getName() + user.getIp() + "与服务器连接成功!");
                 writer.flush();
                 // 反馈当前在线用户信息
-                if (clients.size() > 0) {
+                if (clientThreads.size() > 0) {
                     StringBuilder sb = new StringBuilder();
-                    for (int i = clients.size() - 1; i >= 0; i--) {
-                        sb.append(clients.get(i).getUser().getName());
+                    for (int i = clientThreads.size() - 1; i >= 0; i--) {
+                        sb.append(clientThreads.get(i).getUser().getName());
                         sb.append('/');
-                        sb.append(clients.get(i).getUser().getIp());
+                        sb.append(clientThreads.get(i).getUser().getIp());
                         sb.append("@");
                     }
-                    writer.println("USERLIST@" + clients.size() + "@" + sb.toString());
+                    writer.println("USERLIST@" + clientThreads.size() + "@" + sb.toString());
                     writer.flush();
                 }
                 // 向所有在线用户发送该用户上线命令
-                for (int i = clients.size() - 1; i >= 0; i--) {
-                    clients.get(i).getWriter().println("ADD@" + user.getName() + user.getIp());
-                    clients.get(i).getWriter().flush();
+                for (int i = clientThreads.size() - 1; i >= 0; i--) {
+                    clientThreads.get(i).getWriter().println("ADD@" + user.getName() + user.getIp());
+                    clientThreads.get(i).getWriter().flush();
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -373,12 +376,12 @@ public class Server {
         }
 
         @SuppressWarnings("deprecation")
-        public void run() {// 不断接收客户端的消息，进行处理。
+        public void run() {
             String message;
             while (true) {
                 try {
-                    message = reader.readLine();// 接收客户端消息
-                    if (message.equals("CLOSE"))// 下线命令
+                    message = reader.readLine();    // 接收客户端消息
+                    if (message.equals("CLOSE"))    // 下线命令
                     {
                         contentArea.append(this.getUser().getName() + this.getUser().getIp() + "下线!\r\n");
                         // 断开连接释放资源
@@ -387,24 +390,24 @@ public class Server {
                         socket.close();
 
                         // 向所有在线用户发送该用户的下线命令
-                        for (int i = clients.size() - 1; i >= 0; i--) {
-                            clients.get(i).getWriter().println("DELETE@" + user.getName());
-                            clients.get(i).getWriter().flush();
+                        for (int i = clientThreads.size() - 1; i >= 0; i--) {
+                            clientThreads.get(i).getWriter().println("DELETE@" + user.getName());
+                            clientThreads.get(i).getWriter().flush();
                         }
 
                         listModel.removeElement(user.getName());// 更新在线列表
 
                         // 删除此条客户端服务线程
-                        for (int i = clients.size() - 1; i >= 0; i--) {
-                            if (clients.get(i).getUser() == user) {
-                                SingleClientThread temp = clients.get(i);
-                                clients.remove(i);// 删除此用户的服务线程
+                        for (int i = clientThreads.size() - 1; i >= 0; i--) {
+                            if (clientThreads.get(i).getUser() == user) {
+                                SingleClientThread temp = clientThreads.get(i);
+                                clientThreads.remove(i);// 删除此用户的服务线程
                                 temp.stop();// 停止这条服务线程
                                 return;
                             }
                         }
                     } else {
-                        dispatcherMessage(message);// 转发消息
+                        dispatcherMessage(message);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -419,10 +422,10 @@ public class Server {
             String content = stringTokenizer.nextToken();
             message = source + "说：" + content;
             contentArea.append(message + "\r\n");
-            if (owner.equals("ALL")) {// 群发
-                for (int i = clients.size() - 1; i >= 0; i--) {
-                    clients.get(i).getWriter().println(message + "(多人发送)");
-                    clients.get(i).getWriter().flush();
+            if (owner.equals("ALL")) {
+                for (int i = clientThreads.size() - 1; i >= 0; i--) {
+                    clientThreads.get(i).getWriter().println(message + "(多人发送)");
+                    clientThreads.get(i).getWriter().flush();
                 }
             }
         }
