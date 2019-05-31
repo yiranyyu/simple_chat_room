@@ -25,77 +25,102 @@ public class Server {
     private JButton btn_start;
     private JButton btn_stop;
     private JButton btn_send;
-    private JPanel northPanel;
-    private JPanel southPanel;
-    private JScrollPane rightPanel;
-    private JScrollPane leftPanel;
+    private JPanel connectionStatusPanel;
+    private JPanel inputPanel;
+    private JScrollPane messagePanel;
+    private JScrollPane chatListScroll;
     private JSplitPane centerSplit;
+
     private JList<String> userList;
     private DefaultListModel<String> listModel;
+    private boolean isStart = false;
 
     private ServerSocket serverSocket;
     private ServerThread serverThread;
     private ArrayList<SingleClientThread> clients;
 
-    private boolean isStart = false;
-
     public Server() {
-        frame = new JFrame("服务器");
-        // 更改JFrame的图标：
-//        frame.setIconImage(Toolkit.getDefaultToolkit().createImage(Server.class.getResource("qq.png")));
-        contentArea = new JTextArea();
-        contentArea.setEditable(false);
-        contentArea.setForeground(Color.blue);
+        initServerUI();
+        addListeners();
+    }
+
+    public static void main(String[] args) {
+        new Server();
+    }
+
+    private void initServerUI() {
+        initInputPanel();
+        initChatListScroll();
+        initMessagePanel();
+        initConnectionStatusPanel();
+        initServerFrame();
+    }
+
+    private void initInputPanel() {
+        listModel = new DefaultListModel<>();
+        userList = new JList<>(listModel);
         txt_message = new JTextField();
+        btn_send = new JButton("发送");
+        inputPanel = new JPanel(new BorderLayout());
+        inputPanel.setBorder(new TitledBorder("写消息"));
+        inputPanel.add(txt_message, "Center");
+        inputPanel.add(btn_send, "East");
+    }
+
+    private void initChatListScroll() {
+        chatListScroll = new JScrollPane(userList);
+        chatListScroll.setBorder(new TitledBorder("在线用户"));
+    }
+
+    private void initMessagePanel() {
+        contentArea = new JTextArea();
+        contentArea.setForeground(Color.blue);
+        contentArea.setEditable(false);
+        messagePanel = new JScrollPane(contentArea);
+        messagePanel.setBorder(new TitledBorder("消息显示区"));
+    }
+
+    private void initConnectionStatusPanel() {
         txt_max = new JTextField("30");
         txt_port = new JTextField("6666");
         btn_start = new JButton("启动");
         btn_stop = new JButton("停止");
-        btn_send = new JButton("发送");
         btn_stop.setEnabled(false);
-        listModel = new DefaultListModel<>();
-        userList = new JList<>(listModel);
+        connectionStatusPanel = new JPanel();
+        connectionStatusPanel.setLayout(new GridLayout(1, 6));
+        connectionStatusPanel.add(new JLabel("人数上限"));
+        connectionStatusPanel.add(txt_max);
+        connectionStatusPanel.add(new JLabel("端口"));
+        connectionStatusPanel.add(txt_port);
+        connectionStatusPanel.add(btn_start);
+        connectionStatusPanel.add(btn_stop);
+        connectionStatusPanel.setBorder(new TitledBorder("配置信息"));
+    }
 
-        southPanel = new JPanel(new BorderLayout());
-        southPanel.setBorder(new TitledBorder("写消息"));
-        southPanel.add(txt_message, "Center");
-        southPanel.add(btn_send, "East");
-        leftPanel = new JScrollPane(userList);
-        leftPanel.setBorder(new TitledBorder("在线用户"));
-
-        rightPanel = new JScrollPane(contentArea);
-        rightPanel.setBorder(new TitledBorder("消息显示区"));
-
-        centerSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel,
-                rightPanel);
+    private void initServerFrame() {
+        frame = new JFrame("服务器");
+        // 更改JFrame的图标：
+        // frame.setIconImage(Toolkit.getDefaultToolkit().createImage(Server.class.getResource("qq.png")));
+        centerSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, chatListScroll, messagePanel);
         centerSplit.setDividerLocation(100);
-        northPanel = new JPanel();
-        northPanel.setLayout(new GridLayout(1, 6));
-        northPanel.add(new JLabel("人数上限"));
-        northPanel.add(txt_max);
-        northPanel.add(new JLabel("端口"));
-        northPanel.add(txt_port);
-        northPanel.add(btn_start);
-        northPanel.add(btn_stop);
-        northPanel.setBorder(new TitledBorder("配置信息"));
-
         frame.setLayout(new BorderLayout());
-        frame.add(northPanel, "North");
+        frame.add(connectionStatusPanel, "North");
+        frame.add(inputPanel, "South");
         frame.add(centerSplit, "Center");
-        frame.add(southPanel, "South");
         frame.setSize(600, 400);
-        //frame.setSize(Toolkit.getDefaultToolkit().getScreenSize());//设置全屏
+        // frame.setSize(Toolkit.getDefaultToolkit().getScreenSize());//设置全屏
         int screen_width = Toolkit.getDefaultToolkit().getScreenSize().width;
         int screen_height = Toolkit.getDefaultToolkit().getScreenSize().height;
-        frame.setLocation((screen_width - frame.getWidth()) / 2,
-                (screen_height - frame.getHeight()) / 2);
+        frame.setLocation((screen_width - frame.getWidth()) / 2, (screen_height - frame.getHeight()) / 2);
         frame.setVisible(true);
+    }
 
+    private void addListeners() {
         // 关闭窗口时事件
         frame.addWindowListener(new WindowAdapter() {
             public void windowClosing(WindowEvent e) {
                 if (isStart) {
-                    closeServer();// 关闭服务器
+                    closeServer();
                 }
                 System.exit(0);
             }
@@ -119,8 +144,7 @@ public class Server {
         btn_start.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (isStart) {
-                    JOptionPane.showMessageDialog(frame, "服务器已处于启动状态，不要重复启动！",
-                            "错误", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(frame, "服务器已处于启动状态，不要重复启动！", "错误", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
                 int max;
@@ -143,16 +167,14 @@ public class Server {
                         throw new Exception("端口号 为正整数！");
                     }
                     startServer(max, port);
-                    contentArea.append("服务器已成功启动!人数上限：" + max + ",端口：" + port
-                            + "\r\n");
+                    contentArea.append("服务器已成功启动!人数上限：" + max + ",端口：" + port + "\r\n");
                     JOptionPane.showMessageDialog(frame, "服务器成功启动!");
                     btn_start.setEnabled(false);
                     txt_max.setEnabled(false);
                     txt_port.setEnabled(false);
                     btn_stop.setEnabled(true);
                 } catch (Exception exc) {
-                    JOptionPane.showMessageDialog(frame, exc.getMessage(),
-                            "错误", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(frame, exc.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
@@ -161,8 +183,7 @@ public class Server {
         btn_stop.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 if (!isStart) {
-                    JOptionPane.showMessageDialog(frame, "服务器还未启动，无需停止！", "错误",
-                            JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(frame, "服务器还未启动，无需停止！", "错误", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
                 try {
@@ -174,33 +195,24 @@ public class Server {
                     contentArea.append("服务器成功停止!\r\n");
                     JOptionPane.showMessageDialog(frame, "服务器成功停止！");
                 } catch (Exception exc) {
-                    JOptionPane.showMessageDialog(frame, "停止服务器发生异常！", "错误",
-                            JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(frame, "停止服务器发生异常！", "错误", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
     }
 
-    // 主方法,程序执行入口
-    public static void main(String[] args) {
-        new Server();
-    }
-
     private void sendMessage() {
         if (!isStart) {
-            JOptionPane.showMessageDialog(frame, "服务器还未启动,不能发送消息！", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(frame, "服务器还未启动,不能发送消息！", "错误", JOptionPane.ERROR_MESSAGE);
             return;
         }
         if (clients.size() == 0) {
-            JOptionPane.showMessageDialog(frame, "没有用户在线,不能发送消息！", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(frame, "没有用户在线,不能发送消息！", "错误", JOptionPane.ERROR_MESSAGE);
             return;
         }
         String message = txt_message.getText().trim();
-        if (message == null || message.equals("")) {
-            JOptionPane.showMessageDialog(frame, "消息不能为空！", "错误",
-                    JOptionPane.ERROR_MESSAGE);
+        if (message.equals("")) {
+            JOptionPane.showMessageDialog(frame, "消息不能为空！", "错误", JOptionPane.ERROR_MESSAGE);
             return;
         }
         sendServerMessage(message);// 群发服务器消息
@@ -225,7 +237,6 @@ public class Server {
         }
     }
 
-    // 关闭服务器
     @SuppressWarnings("deprecation")
     private void closeServer() {
         try {
@@ -256,7 +267,7 @@ public class Server {
     }
 
     // 群发服务器消息
-    public void sendServerMessage(String message) {
+    private void sendServerMessage(String message) {
         for (int i = clients.size() - 1; i >= 0; i--) {
             clients.get(i).getWriter().println("服务器：" + message + "(多人发送)");
             clients.get(i).getWriter().flush();
@@ -273,22 +284,24 @@ public class Server {
         }
 
         public void run() {
-            while (true) {// 不停的等待客户端的链接
+            while (true) {
                 try {
                     Socket socket = serverSocket.accept();
-                    if (clients.size() == max) {// 如果已达人数上限
-                        BufferedReader r = new BufferedReader(
-                                new InputStreamReader(socket.getInputStream()));
-                        PrintWriter w = new PrintWriter(socket
-                                .getOutputStream());
+
+                    // 如果已达人数上限
+                    if (clients.size() == max) {
+                        BufferedReader r = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                        PrintWriter w = new PrintWriter(socket.getOutputStream());
+
                         // 接收客户端的基本用户信息
                         String inf = r.readLine();
                         StringTokenizer st = new StringTokenizer(inf, "@");
                         User user = new User(st.nextToken(), st.nextToken());
+
                         // 反馈连接成功信息
-                        w.println("MAX@服务器：对不起，" + user.getName()
-                                + user.getIp() + "，服务器在线人数已达上限，请稍后尝试连接！");
+                        w.println("MAX@服务器：对不起，" + user.getName() + user.getIp() + "，服务器在线人数已达上限，请稍后尝试连接！");
                         w.flush();
+
                         // 释放资源
                         r.close();
                         w.close();
@@ -299,8 +312,7 @@ public class Server {
                     client.start();// 开启对此客户端服务的线程
                     clients.add(client);
                     listModel.addElement(client.getUser().getName());// 更新在线列表
-                    contentArea.append(client.getUser().getName()
-                            + client.getUser().getIp() + "上线!\r\n");
+                    contentArea.append(client.getUser().getName() + client.getUser().getIp() + "上线!\r\n");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -308,7 +320,6 @@ public class Server {
         }
     }
 
-    // 为一个客户端服务的线程
     class SingleClientThread extends Thread {
         private Socket socket;
         private BufferedReader reader;
@@ -318,8 +329,7 @@ public class Server {
         SingleClientThread(Socket socket) {
             try {
                 this.socket = socket;
-                reader = new BufferedReader(new InputStreamReader(socket
-                        .getInputStream()));
+                reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 writer = new PrintWriter(socket.getOutputStream());
                 // 接收客户端的基本用户信息
                 String inf = reader.readLine();
@@ -342,8 +352,7 @@ public class Server {
                 }
                 // 向所有在线用户发送该用户上线命令
                 for (int i = clients.size() - 1; i >= 0; i--) {
-                    clients.get(i).getWriter().println(
-                            "ADD@" + user.getName() + user.getIp());
+                    clients.get(i).getWriter().println("ADD@" + user.getName() + user.getIp());
                     clients.get(i).getWriter().flush();
                 }
             } catch (IOException e) {
@@ -355,24 +364,23 @@ public class Server {
             return reader;
         }
 
-        public PrintWriter getWriter() {
+        PrintWriter getWriter() {
             return writer;
         }
 
-        public User getUser() {
+        User getUser() {
             return user;
         }
 
         @SuppressWarnings("deprecation")
         public void run() {// 不断接收客户端的消息，进行处理。
-            String message = null;
+            String message;
             while (true) {
                 try {
                     message = reader.readLine();// 接收客户端消息
                     if (message.equals("CLOSE"))// 下线命令
                     {
-                        contentArea.append(this.getUser().getName()
-                                + this.getUser().getIp() + "下线!\r\n");
+                        contentArea.append(this.getUser().getName() + this.getUser().getIp() + "下线!\r\n");
                         // 断开连接释放资源
                         reader.close();
                         writer.close();
@@ -380,8 +388,7 @@ public class Server {
 
                         // 向所有在线用户发送该用户的下线命令
                         for (int i = clients.size() - 1; i >= 0; i--) {
-                            clients.get(i).getWriter().println(
-                                    "DELETE@" + user.getName());
+                            clients.get(i).getWriter().println("DELETE@" + user.getName());
                             clients.get(i).getWriter().flush();
                         }
 
@@ -405,8 +412,7 @@ public class Server {
             }
         }
 
-        // 转发消息
-        public void dispatcherMessage(String message) {
+        void dispatcherMessage(String message) {
             StringTokenizer stringTokenizer = new StringTokenizer(message, "@");
             String source = stringTokenizer.nextToken();
             String owner = stringTokenizer.nextToken();
