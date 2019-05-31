@@ -42,12 +42,27 @@ public class Client {
     private Map<String, User> onlineUsers = new HashMap<>();// 所有在线用户
 
     private Client() {
-        initClientUI();
-        addListeners();
+        startLogin();
+        // initClientUI();
+        // addListeners();
     }
 
     public static void main(String[] args) {
         new Client();
+    }
+
+    private void startLogin() {
+        LoginPanel loginPanel = new LoginPanel();
+        loginPanel.show();
+        while (loginPanel.isEnabled()) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                // do nothing but wait
+            }
+        }
+        initClientUI();
+        addListeners();
     }
 
     private void initClientUI() {
@@ -210,7 +225,7 @@ public class Client {
         textField.setText(null);
     }
 
-    public boolean connectServer(int port, String hostIp, String name) {
+    private boolean connectServer(int port, String hostIp, String name) {
         try {
             socket = new Socket(hostIp, port);// 根据端口号和服务器ip建立连接
             writer = new PrintWriter(socket.getOutputStream());
@@ -265,7 +280,7 @@ public class Client {
         private BufferedReader reader;
         private JTextArea textArea;
 
-        public MessageListenerThread(BufferedReader reader, JTextArea textArea) {
+        MessageListenerThread(BufferedReader reader, JTextArea textArea) {
             this.reader = reader;
             this.textArea = textArea;
         }
@@ -286,40 +301,40 @@ public class Client {
                     StringTokenizer msgTokenizer = new StringTokenizer(message, "/@");
                     String command = msgTokenizer.nextToken();
                     switch (command) {
-                        case "CLOSE":
-                            textArea.append("服务器已关闭!\r\n");
-                            closeConnectionPassively();
-                            return;
-                        case "ADD":
-                            if ((username = msgTokenizer.nextToken()) != null
-                                    && (userIp = msgTokenizer.nextToken()) != null) {
-                                user = new User(username, userIp);
-                                onlineUsers.put(username, user);
-                                listModel.addElement(username);
-                            }
-                            break;
-                        case "DELETE":
+                    case "CLOSE":
+                        textArea.append("服务器已关闭!\r\n");
+                        closeConnectionPassively();
+                        return;
+                    case "ADD":
+                        if ((username = msgTokenizer.nextToken()) != null
+                                && (userIp = msgTokenizer.nextToken()) != null) {
+                            user = new User(username, userIp);
+                            onlineUsers.put(username, user);
+                            listModel.addElement(username);
+                        }
+                        break;
+                    case "DELETE":
+                        username = msgTokenizer.nextToken();
+                        onlineUsers.remove(username);
+                        listModel.removeElement(username);
+                        break;
+                    case "USERLIST":
+                        int size = Integer.parseInt(msgTokenizer.nextToken());
+                        for (int i = 0; i < size; i++) {
                             username = msgTokenizer.nextToken();
-                            onlineUsers.remove(username);
-                            listModel.removeElement(username);
-                            break;
-                        case "USERLIST":
-                            int size = Integer.parseInt(msgTokenizer.nextToken());
-                            for (int i = 0; i < size; i++) {
-                                username = msgTokenizer.nextToken();
-                                userIp = msgTokenizer.nextToken();
-                                user = new User(username, userIp);
-                                onlineUsers.put(username, user);
-                                listModel.addElement(username);
-                            }
-                            break;
-                        case "MAX":
-                            textArea.append(msgTokenizer.nextToken() + msgTokenizer.nextToken() + "\r\n");
-                            closeConnectionPassively();// 被动的关闭连接
-                            JOptionPane.showMessageDialog(frame, "服务器缓冲区已满！", "错误", JOptionPane.ERROR_MESSAGE);
-                            return;
-                        default:
-                            textArea.append(message + "\r\n");
+                            userIp = msgTokenizer.nextToken();
+                            user = new User(username, userIp);
+                            onlineUsers.put(username, user);
+                            listModel.addElement(username);
+                        }
+                        break;
+                    case "MAX":
+                        textArea.append(msgTokenizer.nextToken() + msgTokenizer.nextToken() + "\r\n");
+                        closeConnectionPassively();// 被动的关闭连接
+                        JOptionPane.showMessageDialog(frame, "服务器缓冲区已满！", "错误", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    default:
+                        textArea.append(message + "\r\n");
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
