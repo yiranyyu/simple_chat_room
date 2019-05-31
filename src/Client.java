@@ -61,6 +61,8 @@ public class Client {
                 // do nothing but wait
             }
         }
+        String username = loginPanel.getUsername();
+        String password = loginPanel.getPassword();
         initClientUI();
         addListeners();
     }
