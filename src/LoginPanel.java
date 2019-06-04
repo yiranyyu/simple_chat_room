@@ -129,6 +129,8 @@ public class LoginPanel extends JPanel {
             return true;
         } catch (UserAlreadyExistsException e) {
             JOptionPane.showMessageDialog(this, e.getMessage());
+        } catch (DatabaseInsertFailException e) {
+        	JOptionPane.showMessageDialog(this, e.getMessage());
         }
         return false;
     }

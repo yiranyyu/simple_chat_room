@@ -29,10 +29,10 @@ public class ProcessSQL {
 		}
 	}
 
-	public boolean ContainsName(String name) {
+	public boolean ContainsName(String username) {
 		boolean flag = true;
 		try {
-			String sql = "SELECT * FROM User WHERE username = " + name;
+			String sql = "SELECT * FROM User WHERE username = " + username;
 			ResultSet rs = stmt.executeQuery(sql);
 			flag = rs.next();
 			rs.close();
@@ -44,31 +44,30 @@ public class ProcessSQL {
 
 	private void ExecuteSqlAndBuildJsonArray(String sql, JSONArray jsonArray) {
 		try {
-		ResultSet rs = stmt.executeQuery(sql);
-		while(rs.next()){
-			int id = rs.getInt("id");
-			String senderid = rs.getString("senderid");
-			String receiverid = rs.getString("receiverid");
-			long time = rs.getLong("time");
-			String text = rs.getString("text");
-			String type = rs.getString("type");
-
-			MSGDB msg = new MSGDB();
-			msg.setID(id);
-			msg.setSenderID(senderid);
-			msg.setReceiverID(receiverid);
-			msg.setTime(time);
-			msg.setText(text);
-			msg.setType(type);
-
-			JSONObject jsonObject = JSONObject.fromObject(msg);
-			jsonArray.add(jsonObject);
-		}
-		rs.close();
+			ResultSet rs = stmt.executeQuery(sql);
+			while(rs.next()){
+				int id = rs.getInt("id");
+				String senderid = rs.getString("senderid");
+				String receiverid = rs.getString("receiverid");
+				long time = rs.getLong("time");
+				String text = rs.getString("text");
+				String type = rs.getString("type");
+				
+				MSGDB msg = new MSGDB();
+				msg.setID(id);
+				msg.setSenderID(senderid);
+				msg.setReceiverID(receiverid);
+				msg.setTime(time);
+				msg.setText(text);
+				msg.setType(type);
+				
+				JSONObject jsonObject = JSONObject.fromObject(msg);
+				jsonArray.add(jsonObject);
+			}
+			rs.close();
 		} catch (SQLException e) {
 		}
 	}
-
 	public JSONArray PullMsg(String sender, String receiver) {
 		JSONArray jsonArray = new JSONArray();
 		String sql = "";
@@ -80,29 +79,31 @@ public class ProcessSQL {
 		return jsonArray;
 	}
 
-	public JSONArray Login(String account, String password) throws myException {
+	public JSONArray Login(String username, String password) 
+			throws UserNotExistsException, PasswordErrorException {
 		try {
-			String sql = "SELECT password from USER WHERE username = " + account;
+			String sql = "SELECT password from USER WHERE username = " + username;
 			ResultSet rs = stmt.executeQuery(sql);
 			if(rs.next()) {
 				String pw = rs.getString("password");
 				if(password.equals(pw) == true) {
-					return this.PullMsg(account, null);
+					return this.PullMsg(username, null);
 				} else 
-					throw new myException("This Password does not correct");
+					throw new PasswordErrorException(username, password);
 			} else 
-				throw new myException("This Account does not exist");
+				throw new UserNotExistsException(username);
 		} catch(SQLException e) {
 		}
 		return null;
 	}
 
-	public void SignUp(String account, String password) throws myException {
-		if(this.ContainsName(account) == true) 
-			throw new myException("This Account has existed");
+	public void SignUp(String username, String password) 
+			throws UserAlreadyExistsException, DatabaseInsertFailException {
+		if(this.ContainsName(username) == true) 
+			throw new UserAlreadyExistsException(username);
 		else {
-			if (this.InsertUser(account, password) == false) 
-				throw new myException("Fail to Insert Value");
+			if (this.InsertUser(username, password) == false) 
+				throw new DatabaseInsertFailException();
 		}
 	}
 

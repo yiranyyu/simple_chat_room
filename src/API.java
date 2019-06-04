@@ -1,16 +1,22 @@
+import net.sf.json.*;
 public class API {
+	private static ProcessSQL psql = new ProcessSQL();
     public static boolean containsName(String username) {
-        return false;
+    	return psql.ContainsName(username);
     }
 
-    public static String pullMessageList(String username_1, String username_2) {
-        return ""; // json format
+    public static JSONArray pullMessageList(String username_1, String username_2) {
+        return psql.PullMsg(username_1, username_2);
     }
 
-    public static void login(String username, String password) throws UserNotExistsException, PasswordErrorException{
+    public static JSONArray login(String username, String password) 
+    		throws UserNotExistsException, PasswordErrorException{
+    	return psql.Login(username, password);
     }
 
-    public static void signup(String username, String password) throws UserAlreadyExistsException{
+    public static void signup(String username, String password) 
+    		throws UserAlreadyExistsException, DatabaseInsertFailException {
+    	psql.SignUp(username, password);
     }
 }
 
@@ -30,4 +36,10 @@ class UserAlreadyExistsException extends Exception{
     UserAlreadyExistsException(String username){
         super("User [" + username + "] already exists");
     }
+}
+
+class DatabaseInsertFailException extends Exception {
+	DatabaseInsertFailException() {
+		super("Fail to Insert Value");
+	}
 }
