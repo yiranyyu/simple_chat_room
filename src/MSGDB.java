@@ -1,7 +1,7 @@
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.sql.Timestamp;
-public class MSG {
+public class MSGDB {
 	private int id;
 	private String senderid;
 	private String reveiverid;

@@ -42,7 +42,8 @@ public class ProcessSQL {
 		return flag;
 	}
 
-	private void ExecuteSqlAndBuildJsonArray(String sql, JSONArry jsonArray) {
+	private void ExecuteSqlAndBuildJsonArray(String sql, JSONArray jsonArray) {
+		try {
 		ResultSet rs = stmt.executeQuery(sql);
 		while(rs.next()){
 			int id = rs.getInt("id");
@@ -64,20 +65,18 @@ public class ProcessSQL {
 			jsonArray.add(jsonObject);
 		}
 		rs.close();
+		} catch (SQLException e) {
+		}
 	}
 
 	public JSONArray PullMsg(String sender, String receiver) {
-		JSONArry jsonArray = new JSONArray();
-		try {
-			String sql = "";
-			if (receiver == null) 
-				sql = "SELECT * FROM MSG WHERE senderid = " + sender + " OR receiverid = " + senderid;
-			else 
-				sql = "SELECT * FROM MSG WHERE (senderid = " + sender + " AND receiver = " + receiver + ") OR (senderid = " + receiver + " AND receiver = " + senderid + ")";
-			this.ExecuteSqlAndBuildJsonArray(sql, jsonArray);
-		} catch(SQLException e) {
-			e.printStackTrace();
-		}
+		JSONArray jsonArray = new JSONArray();
+		String sql = "";
+		if (receiver == null) 
+			sql = "SELECT * FROM MSG WHERE senderid = " + sender + " OR receiverid = " + sender;
+		else 
+			sql = "SELECT * FROM MSG WHERE (senderid = " + sender + " AND receiver = " + receiver + ") OR (senderid = " + receiver + " AND receiver = " + sender + ")";
+		this.ExecuteSqlAndBuildJsonArray(sql, jsonArray);
 		return jsonArray;
 	}
 
@@ -95,16 +94,15 @@ public class ProcessSQL {
 				throw new myException("This Account does not exist");
 		} catch(SQLException e) {
 		}
+		return null;
 	}
 
 	public void SignUp(String account, String password) throws myException {
 		if(this.ContainsName(account) == true) 
 			throw new myException("This Account has existed");
 		else {
-			try {
-				if (this.InsertUser(account, password) == false) 
-					throw new myException("Fail to Insert Value");
-			} catch(SQLException e) {
+			if (this.InsertUser(account, password) == false) 
+				throw new myException("Fail to Insert Value");
 		}
 	}
 

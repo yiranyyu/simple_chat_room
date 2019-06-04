@@ -1,4 +1,4 @@
-public class USER {
+public class USERDB {
 	private int id;
 	private String username;
 	private String password;
