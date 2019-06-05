@@ -17,3 +17,6 @@ hs_err_pid*
 
 # output file
 out
+
+# MacOS ds store file
+*.DS_Store
