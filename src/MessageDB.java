@@ -1,63 +1,56 @@
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 public class MessageDB {
-    private int id;
-    private String senderID;
-    private String receiverID;
-    private String time;
-    private String text;
-    /* two options
-    /  1. Text
-    /  2. Pic
-    */
-    private String type;
+	private int id;
+	private int senderid;
+	private int receiverid;
+	private String time;
+	private String text;
 
-    public int getID() {
-        return this.id;
-    }
+	public MessageDB(int id,int senderid,int receiverid,String time,String text) {
+		this.id = id;
+		this.senderid = senderid;
+		this.receiverid = receiverid;
+		this.time = time;
+		this.text = text;
+	}
 
-    void setID(int id) {
-        this.id = id;
-    }
+	public void setID(int id) {
+		this.id = id;
+	}
+	
+	public int getID() {
+		return this.id;
+	}
+	
+	public void setSenderID(int senderid) {
+		this.senderid = senderid;
+	}
 
-    public String getSenderID() {
-        return this.senderID;
-    }
+	public int getSenderID() {
+		return this.senderid;
+	}
 
-    void setSenderID(String senderID) {
-        this.senderID = senderID;
-    }
+	public void setReceiverID(int receiverid) {
+		this.receiverid = receiverid;
+	}
 
-    public String getReceiverID() {
-        return this.receiverID;
-    }
+	public int getReceiverID() {
+		return this.receiverid;
+	}
 
-    void setReceiverID(String receiverID) {
-        this.receiverID = receiverID;
-    }
+	public void setTime(String time) {
+		this.time = time;
+	}
 
-    public String getTime() {
-        return this.time;
-    }
+	public String getTime() {
+		return this.time;
+	}
 
-    void setTime(long time) {
-        this.time = (new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")).format(new Date(time));
-    }
+	public void setText(String text) {
+		this.text = text;
+	}
 
-    public String getText() {
-        return this.text;
-    }
+	public String getText() {
+		return this.text;
+	}
 
-    void setText(String text) {
-        this.text = text;
-    }
-
-    public String getType() {
-        return this.type;
-    }
-
-    void setType(String type) {
-        this.type = type;
-    }
 }

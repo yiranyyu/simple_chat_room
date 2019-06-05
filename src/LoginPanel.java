@@ -2,27 +2,21 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class LoginPanel extends JPanel {
-    private static final int WIDTH = 300;
-    private static final int HEIGHT = 150;
     private static final long serialVersionUID = 1L;
+    static final int WIDTH = 300;
+    static final int HEIGHT = 150;
     private JFrame frame;
     private JTextField usernameField = new JTextField(15);
     private JTextField passwordField = new JTextField(15);
     private JButton loginButton = new JButton("登录");
-    private JButton signUpButton = new JButton("注册");
+    private JButton signupButton = new JButton("注册");
     private GridBagConstraints constraints = new GridBagConstraints();
     private String username;
     private String password;
-
-    LoginPanel() {
-        initConstraints();
-        initLayout();
-        initFrame();
-        addListeners();
-        startShow();
-    }
 
     public static void main(String[] args) {
         new LoginPanel();
@@ -41,7 +35,7 @@ public class LoginPanel extends JPanel {
         add(new JLabel("用户名"), constraints, 0, 1, 1, 1);
         add(new JLabel("密 码"), constraints, 0, 2, 1, 1);
         add(loginButton, constraints, 0, 3, 1, 1);
-        add(signUpButton, constraints, 2, 3, 1, 1);
+        add(signupButton, constraints, 2, 3, 1, 1);
         add(usernameField, constraints, 2, 1, 1, 1);
         add(passwordField, constraints, 2, 2, 1, 1);
     }
@@ -55,6 +49,14 @@ public class LoginPanel extends JPanel {
         frame.setLocation((screenSize.width - WIDTH) / 2, (screenSize.height - HEIGHT) / 2);
     }
 
+    public LoginPanel() {
+        initConstraints();
+        initLayout();
+        initFrame();
+        addListeners();
+        show();
+    }
+
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -65,7 +67,7 @@ public class LoginPanel extends JPanel {
         g.drawImage(img, 0, 0, this.getWidth(), this.getHeight(), this);
     }
 
-    private void add(Component c, GridBagConstraints constraints, int x, int y, int w, int h) {
+    public void add(Component c, GridBagConstraints constraints, int x, int y, int w, int h) {
         constraints.gridx = x;
         constraints.gridy = y;
         constraints.gridwidth = w;
@@ -73,12 +75,12 @@ public class LoginPanel extends JPanel {
         add(c, constraints);
     }
 
-    void startShow() {
+    public void show() {
         frame.setResizable(false);
         frame.setVisible(true);
     }
 
-    private void addListeners() {
+    public void addListeners() {
         // frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         // frame.addWindowListener(new WindowAdapter() {
         // @Override
@@ -95,10 +97,10 @@ public class LoginPanel extends JPanel {
                 }
             }
         });
-        signUpButton.addActionListener(new ActionListener() {
+        signupButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (signUp()) {
+                if (signup()) {
                     LoginPanel.this.setEnabled(false);
                 }
             }
@@ -119,25 +121,25 @@ public class LoginPanel extends JPanel {
         return false;
     }
 
-    private boolean signUp() {
+    private boolean signup() {
         username = usernameField.getText().strip();
         password = passwordField.getText().strip();
         try {
-            API.signUp(username, password);
+            API.signup(username, password);
             return true;
         } catch (UserAlreadyExistsException e) {
             JOptionPane.showMessageDialog(this, e.getMessage());
         } catch (DatabaseInsertFailException e) {
-            JOptionPane.showMessageDialog(this, e.getMessage());
+        	JOptionPane.showMessageDialog(this, e.getMessage());
         }
         return false;
     }
 
-    String getUsername() {
+    public String getUsername() {
         return username;
     }
 
-    String getPassword() {
+    public String getPassword() {
         return password;
     }
 }
