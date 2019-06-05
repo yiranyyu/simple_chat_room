@@ -42,18 +42,16 @@ public class Client {
     private Map<String, User> onlineUsers = new HashMap<>();// 所有在线用户
 
     private Client() {
-        startLogin();
-        // initClientUI();
-        // addListeners();
+        startWithLogin();
     }
 
     public static void main(String[] args) {
         new Client();
     }
 
-    private void startLogin() {
+    private void startWithLogin() {
         LoginPanel loginPanel = new LoginPanel();
-        loginPanel.show();
+        loginPanel.startShow();
         while (loginPanel.isEnabled()) {
             try {
                 Thread.sleep(100);
@@ -63,6 +61,8 @@ public class Client {
         }
         String username = loginPanel.getUsername();
         String password = loginPanel.getPassword();
+        System.out.println("Username = " + username);
+        System.out.println("Password = " + password);
         initClientUI();
         addListeners();
     }
