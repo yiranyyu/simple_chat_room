@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.StringTokenizer;
 
 public class Server {
-
     private JFrame frame;
     private JTextArea contentArea;
     private JTextField txt_message;

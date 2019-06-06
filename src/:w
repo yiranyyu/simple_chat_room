@@ -83,6 +83,7 @@ public class ProcessSQL {
 	public JSONArray PullMsg(String sender, String receiver) {
 		int senderid = this.findIdByusername(sender);
 		int receiverid = this.findIdByusername(receiver);
+		
 		String sql = "";
 		if (receiver == null) 
 			sql = String.format("SELECT * FROM Msg WHERE sender = %d OR receiver = %d", senderid, senderid);
@@ -91,12 +92,10 @@ public class ProcessSQL {
 		return this.ExecuteSqlAndBuildJsonArray(sql);
 	}
    /**
-   * This method verifies account and return data organized by JSONArray
+   * This method verify account and return data organized by JSONArray
    * @param username username of the account.
-   * @param password password of the account. 
+   * @param password password of the account.
    * @return JSONArray.
-   * @exception UserNotExistsException On username not exist error.
-   * @exception PasswordErrorException On password wrong error.
    */	
 	public JSONArray Login(String username, String password) 
 			throws UserNotExistsException, PasswordErrorException {
@@ -117,12 +116,12 @@ public class ProcessSQL {
 		return null;
 	}
    /**
-   * This method checks the username and add user data to the database
+   * This method check the username and sign up for the user
    * @param username username of the account.
    * @param password password of the account.
    * @return Nothing.
-   * @exception UserAlreadyExistsException On duplicate username error.
-   * @exception DatabaseInsertFailException On insert data to database error.
+   * @exception IOException On input error.
+   * @see IOException
    */
 	public void SignUp(String username, String password) 
 			throws UserAlreadyExistsException, DatabaseInsertFailException {
@@ -133,14 +132,7 @@ public class ProcessSQL {
 				throw new DatabaseInsertFailException();
 		}
 	}
-   /**
-   * This method adds message data to the database
-   * @param sendername sender's username.
-   * @param receivername receiver's username.
-   * @param content content in the message.
-   * @return boolean.
-   * @exception UserNotExistsException On username not exist error.
-   */
+
 	public boolean SendMsg(String sendername, String receivername, String content) 
 			throws UserNotExistsException {
 		int senderid = this.findIdByusername(sendername);
@@ -161,11 +153,7 @@ public class ProcessSQL {
 		}
 		return true;
 	}
-   /**
-   * This method finds username by userId in database
-   * @param username username of user.
-   * @return int userid of a user -1 means not exist.
-   */	
+	
 	private int findIdByusername(String username) {
 		if (username == null)
 			return -1;
@@ -180,12 +168,7 @@ public class ProcessSQL {
 		}
 		return -1;
 	}
-   /**
-   * This method inserts a user data to the database
-   * @param username username of a user.
-   * @param password password of a user.
-   * @return boolean.
-   */
+
 	private boolean InsertUser(String username, String password) {
 		try {
 			String sql = String.format("insert into User(username,password) Values('%s','%s')", username, password);
@@ -198,10 +181,7 @@ public class ProcessSQL {
 		}
 		return true;
 	}
-   /**
-   * This method closes the connection to the databasae
-   * @return Nothing.
-   */
+
 	void close() {
 		try {
 			stmt.close();
