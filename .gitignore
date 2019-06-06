@@ -20,3 +20,6 @@ out
 
 # MacOS ds store file
 *.DS_Store
+
+# remove log file from tracking
+log
