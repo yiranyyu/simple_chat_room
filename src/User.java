@@ -19,12 +19,12 @@ class User {
         this.ip = ip;
     }
 
-    String getName() {
-        return name;
-    }
-
     void setName(String name) {
         this.name = name;
+    }
+
+    String getName() {
+        return name;
     }
 
     String getIp() {

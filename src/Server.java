@@ -20,7 +20,6 @@ import java.util.StringTokenizer;
  * @author Yirany
  */
 public class Server {
-
     private JFrame frame;
     private JTextArea contentArea;
     private JTextField txt_message;

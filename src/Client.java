@@ -51,7 +51,9 @@ public class Client {
      * Start with login
      */
     private Client() {
-        startWithLogin();
+        startLogin();
+        // initClientUI();
+        // addListeners();
     }
 
     /**
@@ -68,7 +70,7 @@ public class Client {
      */
     private void startWithLogin() {
         LoginPanel loginPanel = new LoginPanel();
-        loginPanel.startShow();
+        loginPanel.show();
         while (loginPanel.isEnabled()) {
             try {
                 Thread.sleep(100);
@@ -78,8 +80,6 @@ public class Client {
         }
         String username = loginPanel.getUsername();
         String password = loginPanel.getPassword();
-        System.out.println("Username = " + username);
-        System.out.println("Password = " + password);
         initClientUI();
         addListeners();
     }
