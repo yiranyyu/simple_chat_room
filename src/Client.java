@@ -43,6 +43,9 @@ public class Client {
     private MessageListenerThread messageListenerThread;// 负责接收消息的线程
     private Map<String, User> onlineUsers = new HashMap<>();// 所有在线用户
 
+
+    private User user;
+
     /**
      * Start with login
      */
@@ -64,7 +67,7 @@ public class Client {
      */
     private void startWithLogin() {
         LoginPanel loginPanel = new LoginPanel();
-        loginPanel.show();
+        loginPanel.startShow();
         while (loginPanel.isEnabled()) {
             try {
                 Thread.sleep(100);
@@ -72,8 +75,10 @@ public class Client {
                 // do nothing but wait
             }
         }
+        System.out.println("Logged in!");
         String username = loginPanel.getUsername();
         String password = loginPanel.getPassword();
+        user = new User(username, "localhost");
         initClientUI();
         addListeners();
     }
@@ -103,8 +108,8 @@ public class Client {
         connectionStatusPanel.add(txt_port);
         connectionStatusPanel.add(new JLabel("服务器IP"));
         connectionStatusPanel.add(txt_hostIp);
-        connectionStatusPanel.add(new JLabel("姓名"));
-        connectionStatusPanel.add(txt_name);
+        connectionStatusPanel.add(new JLabel(String.format("用户名: %s", user.getName())));
+//        connectionStatusPanel.add(txt_name);
 
         btn_start = new JButton("连接");
         btn_stop = new JButton("断开");

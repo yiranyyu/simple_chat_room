@@ -13,6 +13,7 @@ public class API {
 
     public static JSONArray login(String username, String password)
             throws UserNotExistsException, PasswordErrorException {
+//        System.out.printf("Try login with %s %s\n", username, password);
         return psql.Login(username, password);
     }
 

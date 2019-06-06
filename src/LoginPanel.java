@@ -1,7 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 /**
  * Log in interface of client
@@ -130,20 +128,23 @@ public class LoginPanel extends JPanel {
         // }
         // });
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        loginButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (login()) {
-                    LoginPanel.this.setEnabled(false);
-                }
+
+        passwordField.addActionListener(arg0 -> {
+            if (login()) {
+                frame.dispose();
+                LoginPanel.this.setEnabled(false);
             }
         });
-        signupButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (signUp()) {
-                    LoginPanel.this.setEnabled(false);
-                }
+        loginButton.addActionListener(e -> {
+            if (login()) {
+                frame.dispose();
+                LoginPanel.this.setEnabled(false);
+            }
+        });
+        signupButton.addActionListener(e -> {
+            if (signUp()) {
+                frame.dispose();
+                LoginPanel.this.setEnabled(false);
             }
         });
     }
