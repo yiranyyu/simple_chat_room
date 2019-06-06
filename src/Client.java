@@ -14,6 +14,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.StringTokenizer;
 
+/**
+ * Client entry class
+ * To start client: run Client#main
+ *
+ * @author Yirany
+ */
 public class Client {
 
     private JFrame frame;
@@ -29,9 +35,8 @@ public class Client {
     private JPanel userInputPanel;
     private JScrollPane dialogueScroll;
     private JScrollPane chatListScroll;
-    private JSplitPane centerSplit;
 
-    private DefaultListModel<String> listModel;
+    private DefaultListModel<String> userListModel;
     private JList<String> userList;
     private boolean isConnected = false;
 
@@ -41,14 +46,26 @@ public class Client {
     private MessageListenerThread messageListenerThread;// 负责接收消息的线程
     private Map<String, User> onlineUsers = new HashMap<>();// 所有在线用户
 
+
+    /**
+     * Start with login
+     */
     private Client() {
         startWithLogin();
     }
 
+    /**
+     * Program start entry
+     *
+     * @param args will be ignored
+     */
     public static void main(String[] args) {
         new Client();
     }
 
+    /**
+     * Called by constructor to start to client program
+     */
     private void startWithLogin() {
         LoginPanel loginPanel = new LoginPanel();
         loginPanel.startShow();
@@ -67,6 +84,9 @@ public class Client {
         addListeners();
     }
 
+    /**
+     * Init client program UI
+     */
     private void initClientUI() {
         initConnectionStatusPanel();
         initDialogueScroll();
@@ -75,6 +95,10 @@ public class Client {
         initClientFrame();
     }
 
+    /**
+     * Init the configuration of status panel which shows the network configuration and
+     * user information.
+     */
     private void initConnectionStatusPanel() {
         txt_port = new JTextField("端口号");
         txt_hostIp = new JTextField("主机 IP");
@@ -85,7 +109,7 @@ public class Client {
         connectionStatusPanel.add(txt_port);
         connectionStatusPanel.add(new JLabel("服务器IP"));
         connectionStatusPanel.add(txt_hostIp);
-        connectionStatusPanel.add(new JLabel("姓SD名"));
+        connectionStatusPanel.add(new JLabel("姓名"));
         connectionStatusPanel.add(txt_name);
 
         btn_start = new JButton("连接");
@@ -95,6 +119,9 @@ public class Client {
         connectionStatusPanel.setBorder(new TitledBorder("连接信息"));
     }
 
+    /**
+     * Init the dialogue panel which displays the user messages
+     */
     private void initDialogueScroll() {
         textArea = new JTextArea();
         textArea.setEditable(false);
@@ -103,13 +130,19 @@ public class Client {
         dialogueScroll.setBorder(new TitledBorder("消息显示区"));
     }
 
+    /**
+     * Init chat list which displays the currently available users to communicate with
+     */
     private void initChatListScroll() {
-        listModel = new DefaultListModel<>();
-        userList = new JList<>(listModel);
+        userListModel = new DefaultListModel<>();
+        userList = new JList<>(userListModel);
         chatListScroll = new JScrollPane(userList);
         chatListScroll.setBorder(new TitledBorder("在线用户"));
     }
 
+    /**
+     * Init input panel for user the write message and send it
+     */
     private void initUserInputPanel() {
         textField = new JTextField();
         btn_send = new JButton("发送");
@@ -119,8 +152,11 @@ public class Client {
         userInputPanel.setBorder(new TitledBorder("写消息"));
     }
 
+    /**
+     * Draw the client main Frame
+     */
     private void initClientFrame() {
-        centerSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, chatListScroll, dialogueScroll);
+        JSplitPane centerSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, chatListScroll, dialogueScroll);
         centerSplit.setDividerLocation(100);
 
         int screen_width = Toolkit.getDefaultToolkit().getScreenSize().width;
@@ -137,68 +173,59 @@ public class Client {
         frame.setVisible(true);
     }
 
+    /**
+     * Add listeners to the window and components in ti.
+     */
     private void addListeners() {
         // 写消息的文本框中按回车键时事件
-        textField.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent arg0) {
-                sendMessageToAllUsers();
-            }
-        });
+        textField.addActionListener(arg0 -> sendMessageToAllUsers());
 
         // 单击发送按钮时事件
-        btn_send.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                sendMessageToAllUsers();
-            }
-        });
+        btn_send.addActionListener(e -> sendMessageToAllUsers());
 
         // 单击连接按钮时事件
-        btn_start.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                int port;
-                if (isConnected) {
-                    JOptionPane.showMessageDialog(frame, "已处于连接上状态，不要重复连接!", "错误", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
+        btn_start.addActionListener(e -> {
+            int port;
+            if (isConnected) {
+                JOptionPane.showMessageDialog(frame, "已处于连接上状态，不要重复连接!", "错误", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            try {
                 try {
-                    try {
-                        port = Integer.parseInt(txt_port.getText().trim());
-                    } catch (NumberFormatException e2) {
-                        throw new Exception("端口号不符合要求!端口为整数!");
-                    }
-                    String hostIp = txt_hostIp.getText().trim();
-                    String name = txt_name.getText().trim();
-                    if (name.equals("") || hostIp.equals("")) {
-                        throw new Exception("姓名、服务器IP不能为空!");
-                    }
-                    boolean flag = connectServer(port, hostIp, name);
-                    if (!flag) {
-                        throw new Exception("与服务器连接失败!");
-                    }
-                    frame.setTitle(name);
-                    JOptionPane.showMessageDialog(frame, "成功连接!");
-                } catch (Exception exc) {
-                    JOptionPane.showMessageDialog(frame, exc.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+                    port = Integer.parseInt(txt_port.getText().trim());
+                } catch (NumberFormatException e2) {
+                    throw new Exception("端口号不符合要求!端口为整数!");
                 }
+                String hostIp = txt_hostIp.getText().trim();
+                String name = txt_name.getText().trim();
+                if (name.equals("") || hostIp.equals("")) {
+                    throw new Exception("姓名、服务器IP不能为空!");
+                }
+                boolean flag = connectServer(port, hostIp, name);
+                if (!flag) {
+                    throw new Exception("与服务器连接失败!");
+                }
+                frame.setTitle(name);
+                JOptionPane.showMessageDialog(frame, "成功连接!");
+            } catch (Exception exc) {
+                JOptionPane.showMessageDialog(frame, exc.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
             }
         });
 
         // 单击断开按钮时事件
-        btn_stop.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                if (!isConnected) {
-                    JOptionPane.showMessageDialog(frame, "已处于断开状态，不要重复断开!", "错误", JOptionPane.ERROR_MESSAGE);
-                    return;
+        btn_stop.addActionListener(e -> {
+            if (!isConnected) {
+                JOptionPane.showMessageDialog(frame, "已处于断开状态，不要重复断开!", "错误", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            try {
+                boolean flag = closeConnection();
+                if (!flag) {
+                    throw new Exception("断开连接发生异常！");
                 }
-                try {
-                    boolean flag = closeConnection();// 断开连接
-                    if (!flag) {
-                        throw new Exception("断开连接发生异常！");
-                    }
-                    JOptionPane.showMessageDialog(frame, "成功断开!");
-                } catch (Exception exc) {
-                    JOptionPane.showMessageDialog(frame, exc.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
-                }
+                JOptionPane.showMessageDialog(frame, "成功断开!");
+            } catch (Exception exc) {
+                JOptionPane.showMessageDialog(frame, exc.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -213,6 +240,9 @@ public class Client {
         });
     }
 
+    /**
+     * Sent current input to all users
+     */
     private void sendMessageToAllUsers() {
         if (!isConnected) {
             JOptionPane.showMessageDialog(frame, "还没有连接服务器，无法发送消息！", "错误", JOptionPane.ERROR_MESSAGE);
@@ -227,6 +257,14 @@ public class Client {
         textField.setText(null);
     }
 
+    /**
+     * Try to connect to server
+     *
+     * @param port   port to connect
+     * @param hostIp IP address of server
+     * @param name   username
+     * @return true if succeed otherwise return false
+     */
     private boolean connectServer(int port, String hostIp, String name) {
         try {
             socket = new Socket(hostIp, port);// 根据端口号和服务器ip建立连接
@@ -237,20 +275,30 @@ public class Client {
             // 开启接收消息的线程
             messageListenerThread = new MessageListenerThread(reader, textArea);
             messageListenerThread.start();
-            isConnected = true;// 已经连接上了
+            isConnected = true;
             return true;
         } catch (Exception e) {
             textArea.append("与端口号为：" + port + "    IP地址为：" + hostIp + "   的服务器连接失败!" + "\r\n");
-            isConnected = false;// 未连接上
+            isConnected = false;
             return false;
         }
     }
 
+    /**
+     * Send message to server
+     *
+     * @param message information to send
+     */
     private void sendMessageToServer(String message) {
         writer.println(message);
         writer.flush();
     }
 
+    /**
+     * Release all resource
+     *
+     * @throws IOException if error occurred
+     */
     private synchronized void releaseResource() throws IOException {
         if (reader != null) {
             reader.close();
@@ -264,6 +312,11 @@ public class Client {
         isConnected = false;
     }
 
+    /**
+     * Close the connection with server
+     *
+     * @return true if successfully closed otherwise false
+     */
     @SuppressWarnings("deprecation")
     private synchronized boolean closeConnection() {
         try {
@@ -278,22 +331,40 @@ public class Client {
         }
     }
 
+    /**
+     * Instance of this class will keep listening the message from server
+     */
     class MessageListenerThread extends Thread {
         private BufferedReader reader;
         private JTextArea textArea;
 
+        /**
+         * Construct with read to listening from and <code>textArea</code> to show received
+         * message
+         *
+         * @param reader   read message from server
+         * @param textArea show received message
+         */
         MessageListenerThread(BufferedReader reader, JTextArea textArea) {
             this.reader = reader;
             this.textArea = textArea;
         }
 
+        /**
+         * Close connection
+         *
+         * @throws Exception if error occurred
+         */
         synchronized void closeConnectionPassively() throws Exception {
             // 清空用户列表
-            listModel.removeAllElements();
+            userListModel.removeAllElements();
             // 被动的关闭连接释放资源
             releaseResource();
         }
 
+        /**
+         * Work entry
+         */
         public void run() {
             String message, username, userIp;
             User user;
@@ -303,40 +374,40 @@ public class Client {
                     StringTokenizer msgTokenizer = new StringTokenizer(message, "/@");
                     String command = msgTokenizer.nextToken();
                     switch (command) {
-                    case "CLOSE":
-                        textArea.append("服务器已关闭!\r\n");
-                        closeConnectionPassively();
-                        return;
-                    case "ADD":
-                        if ((username = msgTokenizer.nextToken()) != null
-                                && (userIp = msgTokenizer.nextToken()) != null) {
-                            user = new User(username, userIp);
-                            onlineUsers.put(username, user);
-                            listModel.addElement(username);
-                        }
-                        break;
-                    case "DELETE":
-                        username = msgTokenizer.nextToken();
-                        onlineUsers.remove(username);
-                        listModel.removeElement(username);
-                        break;
-                    case "USERLIST":
-                        int size = Integer.parseInt(msgTokenizer.nextToken());
-                        for (int i = 0; i < size; i++) {
+                        case "CLOSE":
+                            textArea.append("服务器已关闭!\r\n");
+                            closeConnectionPassively();
+                            return;
+                        case "ADD":
+                            if ((username = msgTokenizer.nextToken()) != null
+                                    && (userIp = msgTokenizer.nextToken()) != null) {
+                                user = new User(username, userIp);
+                                onlineUsers.put(username, user);
+                                userListModel.addElement(username);
+                            }
+                            break;
+                        case "DELETE":
                             username = msgTokenizer.nextToken();
-                            userIp = msgTokenizer.nextToken();
-                            user = new User(username, userIp);
-                            onlineUsers.put(username, user);
-                            listModel.addElement(username);
-                        }
-                        break;
-                    case "MAX":
-                        textArea.append(msgTokenizer.nextToken() + msgTokenizer.nextToken() + "\r\n");
-                        closeConnectionPassively();// 被动的关闭连接
-                        JOptionPane.showMessageDialog(frame, "服务器缓冲区已满！", "错误", JOptionPane.ERROR_MESSAGE);
-                        return;
-                    default:
-                        textArea.append(message + "\r\n");
+                            onlineUsers.remove(username);
+                            userListModel.removeElement(username);
+                            break;
+                        case "USERLIST":
+                            int size = Integer.parseInt(msgTokenizer.nextToken());
+                            for (int i = 0; i < size; i++) {
+                                username = msgTokenizer.nextToken();
+                                userIp = msgTokenizer.nextToken();
+                                user = new User(username, userIp);
+                                onlineUsers.put(username, user);
+                                userListModel.addElement(username);
+                            }
+                            break;
+                        case "MAX":
+                            textArea.append(msgTokenizer.nextToken() + msgTokenizer.nextToken() + "\r\n");
+                            closeConnectionPassively();// 被动的关闭连接
+                            JOptionPane.showMessageDialog(frame, "服务器缓冲区已满！", "错误", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        default:
+                            textArea.append(message + "\r\n");
                     }
                 } catch (IOException e) {
                     e.printStackTrace();

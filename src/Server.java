@@ -1,8 +1,6 @@
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
@@ -15,6 +13,12 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 
+/**
+ * Server program entry
+ * To start server: run <code>Server#main</code>
+ *
+ * @author Yirany
+ */
 public class Server {
 
     private JFrame frame;
@@ -29,7 +33,6 @@ public class Server {
     private JPanel inputPanel;
     private JScrollPane messagePanel;
     private JScrollPane chatListScroll;
-    private JSplitPane centerSplit;
 
     private JList<String> userList;
     private DefaultListModel<String> listModel;
@@ -39,15 +42,26 @@ public class Server {
     private ServerThread serverThread;
     private ArrayList<SingleClientThread> clientThreads;
 
+    /**
+     * Default constructor, start the server
+     */
     private Server() {
         initServerUI();
         addListeners();
     }
 
+    /**
+     * Entry of server program
+     *
+     * @param args will be ignored by default
+     */
     public static void main(String[] args) {
         new Server();
     }
 
+    /**
+     * Init the GUI of server
+     */
     private void initServerUI() {
         initInputPanel();
         initChatListScroll();
@@ -56,6 +70,9 @@ public class Server {
         initServerFrame();
     }
 
+    /**
+     * Init the input Panel of server program
+     */
     private void initInputPanel() {
         listModel = new DefaultListModel<>();
         userList = new JList<>(listModel);
@@ -67,11 +84,17 @@ public class Server {
         inputPanel.add(btn_send, "East");
     }
 
+    /**
+     * Init chat list which displays all activate users
+     */
     private void initChatListScroll() {
         chatListScroll = new JScrollPane(userList);
         chatListScroll.setBorder(new TitledBorder("在线用户"));
     }
 
+    /**
+     * Init message panel which displays the messages
+     */
     private void initMessagePanel() {
         contentArea = new JTextArea();
         contentArea.setForeground(Color.blue);
@@ -80,6 +103,10 @@ public class Server {
         messagePanel.setBorder(new TitledBorder("消息显示区"));
     }
 
+    /**
+     * Init the connection status panel which displays the connection information,
+     * which include the port, max_connection etc.
+     */
     private void initConnectionStatusPanel() {
         txt_max = new JTextField("30");
         txt_port = new JTextField("6666");
@@ -97,11 +124,14 @@ public class Server {
         connectionStatusPanel.setBorder(new TitledBorder("配置信息"));
     }
 
+    /**
+     * Init server main frame
+     */
     private void initServerFrame() {
         frame = new JFrame("服务器");
         // 更改JFrame的图标：
         // frame.setIconImage(Toolkit.getDefaultToolkit().createImage(Server.class.getResource("qq.png")));
-        centerSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, chatListScroll, messagePanel);
+        JSplitPane centerSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, chatListScroll, messagePanel);
         centerSplit.setDividerLocation(100);
         frame.setLayout(new BorderLayout());
         frame.add(connectionStatusPanel, "North");
@@ -115,6 +145,9 @@ public class Server {
         frame.setVisible(true);
     }
 
+    /**
+     * Add listeners to the frame and components in it
+     */
     private void addListeners() {
         // 关闭窗口时事件
         frame.addWindowListener(new WindowAdapter() {
@@ -127,80 +160,71 @@ public class Server {
         });
 
         // 文本框按回车键时事件
-        txt_message.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                sendServerMessageToAllUsers();
-            }
-        });
+        txt_message.addActionListener(e -> sendServerMessageToAllUsers());
 
         // 单击发送按钮时事件
-        btn_send.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent arg0) {
-                sendServerMessageToAllUsers();
-            }
-        });
+        btn_send.addActionListener(arg0 -> sendServerMessageToAllUsers());
 
         // 单击启动服务器按钮时事件
-        btn_start.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                if (isStart) {
-                    JOptionPane.showMessageDialog(frame, "服务器已处于启动状态，不要重复启动！", "错误", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                int max;
-                int port;
+        btn_start.addActionListener(e -> {
+            if (isStart) {
+                JOptionPane.showMessageDialog(frame, "服务器已处于启动状态，不要重复启动！", "错误", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            int max;
+            int port;
+            try {
                 try {
-                    try {
-                        max = Integer.parseInt(txt_max.getText());
-                    } catch (Exception e1) {
-                        throw new Exception("人数上限为正整数！");
-                    }
-                    if (max <= 0) {
-                        throw new Exception("人数上限为正整数！");
-                    }
-                    try {
-                        port = Integer.parseInt(txt_port.getText());
-                    } catch (Exception e1) {
-                        throw new Exception("端口号为正整数！");
-                    }
-                    if (port <= 0) {
-                        throw new Exception("端口号 为正整数！");
-                    }
-                    startServer(max, port);
-                    contentArea.append("服务器已成功启动!人数上限：" + max + ",端口：" + port + "\r\n");
-                    JOptionPane.showMessageDialog(frame, "服务器成功启动!");
-                    btn_start.setEnabled(false);
-                    txt_max.setEnabled(false);
-                    txt_port.setEnabled(false);
-                    btn_stop.setEnabled(true);
-                } catch (Exception exc) {
-                    JOptionPane.showMessageDialog(frame, exc.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+                    max = Integer.parseInt(txt_max.getText());
+                } catch (Exception e1) {
+                    throw new Exception("人数上限为正整数！");
                 }
+                if (max <= 0) {
+                    throw new Exception("人数上限为正整数！");
+                }
+                try {
+                    port = Integer.parseInt(txt_port.getText());
+                } catch (Exception e1) {
+                    throw new Exception("端口号为正整数！");
+                }
+                if (port <= 0) {
+                    throw new Exception("端口号 为正整数！");
+                }
+                startServer(max, port);
+                contentArea.append("服务器已成功启动!人数上限：" + max + ",端口：" + port + "\r\n");
+                JOptionPane.showMessageDialog(frame, "服务器成功启动!");
+                btn_start.setEnabled(false);
+                txt_max.setEnabled(false);
+                txt_port.setEnabled(false);
+                btn_stop.setEnabled(true);
+            } catch (Exception exc) {
+                JOptionPane.showMessageDialog(frame, exc.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
             }
         });
 
         // 单击停止服务器按钮时事件
-        btn_stop.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                if (!isStart) {
-                    JOptionPane.showMessageDialog(frame, "服务器还未启动，无需停止！", "错误", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                try {
-                    stopServer();
-                    btn_start.setEnabled(true);
-                    txt_max.setEnabled(true);
-                    txt_port.setEnabled(true);
-                    btn_stop.setEnabled(false);
-                    contentArea.append("服务器成功停止!\r\n");
-                    JOptionPane.showMessageDialog(frame, "服务器成功停止！");
-                } catch (Exception exc) {
-                    JOptionPane.showMessageDialog(frame, "停止服务器发生异常！", "错误", JOptionPane.ERROR_MESSAGE);
-                }
+        btn_stop.addActionListener(e -> {
+            if (!isStart) {
+                JOptionPane.showMessageDialog(frame, "服务器还未启动，无需停止！", "错误", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            try {
+                stopServer();
+                btn_start.setEnabled(true);
+                txt_max.setEnabled(true);
+                txt_port.setEnabled(true);
+                btn_stop.setEnabled(false);
+                contentArea.append("服务器成功停止!\r\n");
+                JOptionPane.showMessageDialog(frame, "服务器成功停止！");
+            } catch (Exception exc) {
+                JOptionPane.showMessageDialog(frame, "停止服务器发生异常！", "错误", JOptionPane.ERROR_MESSAGE);
             }
         });
     }
 
+    /**
+     * send message to all users
+     */
     private void sendServerMessageToAllUsers() {
         if (!isStart) {
             JOptionPane.showMessageDialog(frame, "服务器还未启动,不能发送消息！", "错误", JOptionPane.ERROR_MESSAGE);
@@ -220,6 +244,12 @@ public class Server {
         txt_message.setText(null);
     }
 
+    /**
+     * Start the backend of server
+     * @param max the maximum of available users
+     * @param port the port to listening the message from users
+     * @throws java.net.BindException if fail to bind the socket
+     */
     private void startServer(int max, int port) throws java.net.BindException {
         try {
             clientThreads = new ArrayList<>();
@@ -237,8 +267,13 @@ public class Server {
         }
     }
 
+    /**
+     * release client thread listening resource
+     * @param i the index of client thread to free withi
+     * @throws IOException if error occurred
+     */
     @SuppressWarnings("deprecation")
-    private void releaseClientResource(int i) throws IOException {
+    private void releaseClientThreadResource(int i) throws IOException {
         clientThreads.get(i).stop();
         clientThreads.get(i).reader.close();
         clientThreads.get(i).writer.close();
@@ -246,6 +281,9 @@ public class Server {
         clientThreads.remove(i);
     }
 
+    /**
+     * stop server thread and all client threads and free resources
+     */
     @SuppressWarnings("deprecation")
     private void stopServer() {
         try {
@@ -256,7 +294,7 @@ public class Server {
                 // 给所有在线用户发送关闭命令
                 clientThreads.get(i).getWriter().println("CLOSE");
                 clientThreads.get(i).getWriter().flush();
-                releaseClientResource(i);
+                releaseClientThreadResource(i);
             }
 
             if (serverSocket != null) {
@@ -270,7 +308,10 @@ public class Server {
         }
     }
 
-
+    /**
+     * send message to all users
+     * @param message message to send with
+     */
     private void sendServerMessageToAllUsersImpl(String message) {
         for (int i = clientThreads.size() - 1; i >= 0; i--) {
             clientThreads.get(i).getWriter().println("服务器：" + message + "(多人发送)");
@@ -278,15 +319,26 @@ public class Server {
         }
     }
 
+    /**
+     * Server thread which listening the message send from clients
+     */
     class ServerThread extends Thread {
         private ServerSocket serverSocket;
-        private int maxUserNumber;// 人数上限
+        private int maxUserNumber;
 
+        /**
+         * Construct server thread with server socket to listening and max number of users
+         * @param serverSocket socket to listening from
+         * @param maxUserNumber max number of available users
+         */
         ServerThread(ServerSocket serverSocket, int maxUserNumber) {
             this.serverSocket = serverSocket;
             this.maxUserNumber = maxUserNumber;
         }
 
+        /**
+         * work entry of server thread
+         */
         public void run() {
             while (true) {
                 try {
@@ -323,12 +375,19 @@ public class Server {
         }
     }
 
+    /**
+     * Thread to listen the message from one certain client
+     */
     class SingleClientThread extends Thread {
         private Socket socket;
         private BufferedReader reader;
         private PrintWriter writer;
         private User user;
 
+        /**
+         * Init with the socket bind with client
+         * @param socket to listen from
+         */
         SingleClientThread(Socket socket) {
             try {
                 this.socket = socket;
@@ -363,10 +422,6 @@ public class Server {
             }
         }
 
-        public BufferedReader getReader() {
-            return reader;
-        }
-
         PrintWriter getWriter() {
             return writer;
         }
@@ -375,6 +430,9 @@ public class Server {
             return user;
         }
 
+        /**
+         * Listen to one client
+         */
         @SuppressWarnings("deprecation")
         public void run() {
             String message;
@@ -415,6 +473,10 @@ public class Server {
             }
         }
 
+        /**
+         * Dispatch message received from one client to other client(s)
+         * @param message received message
+         */
         void dispatcherMessage(String message) {
             StringTokenizer stringTokenizer = new StringTokenizer(message, "@");
             String source = stringTokenizer.nextToken();

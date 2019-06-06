@@ -3,6 +3,9 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+/**
+ * Log in interface of client
+ */
 public class LoginPanel extends JPanel {
     private static final int WIDTH = 300;
     private static final int HEIGHT = 150;
@@ -16,6 +19,9 @@ public class LoginPanel extends JPanel {
     private String username;
     private String password;
 
+    /**
+     * Construct one login panel
+     */
     LoginPanel() {
         initConstraints();
         initLayout();
@@ -24,10 +30,18 @@ public class LoginPanel extends JPanel {
         startShow();
     }
 
+    /**
+     * Start of the login panel, this is just for test usage
+     *
+     * @param args should be ignored by default
+     */
     public static void main(String[] args) {
         new LoginPanel();
     }
 
+    /**
+     * Init the layout constraints
+     */
     private void initConstraints() {
         setLayout(new GridBagLayout());
         constraints.fill = GridBagConstraints.NONE;
@@ -36,6 +50,9 @@ public class LoginPanel extends JPanel {
         constraints.weighty = 4;
     }
 
+    /**
+     * Init layout of components in panel
+     */
     private void initLayout() {
         add(new JLabel("登录 / 注册"), constraints, 0, 0, 1, 1);
         add(new JLabel("用户名"), constraints, 0, 1, 1, 1);
@@ -46,6 +63,9 @@ public class LoginPanel extends JPanel {
         add(passwordField, constraints, 2, 2, 1, 1);
     }
 
+    /**
+     * Init the main frame of login panel
+     */
     private void initFrame() {
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         frame = new JFrame();
@@ -55,6 +75,11 @@ public class LoginPanel extends JPanel {
         frame.setLocation((screenSize.width - WIDTH) / 2, (screenSize.height - HEIGHT) / 2);
     }
 
+    /**
+     * Override the {@link JPanel#paintComponent(Graphics)} to add background image
+     *
+     * @param g default argument
+     */
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -65,6 +90,16 @@ public class LoginPanel extends JPanel {
         g.drawImage(img, 0, 0, this.getWidth(), this.getHeight(), this);
     }
 
+    /**
+     * Add component to panel
+     *
+     * @param c           the component to be added
+     * @param constraints layout constraints
+     * @param x           x index
+     * @param y           y index
+     * @param w           width
+     * @param h           height
+     */
     private void add(Component c, GridBagConstraints constraints, int x, int y, int w, int h) {
         constraints.gridx = x;
         constraints.gridy = y;
@@ -73,11 +108,17 @@ public class LoginPanel extends JPanel {
         add(c, constraints);
     }
 
+    /**
+     * Start to show the panel
+     */
     void startShow() {
         frame.setResizable(false);
         frame.setVisible(true);
     }
 
+    /**
+     * Add event listeners
+     */
     private void addListeners() {
         // frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         // frame.addWindowListener(new WindowAdapter() {
@@ -105,6 +146,11 @@ public class LoginPanel extends JPanel {
         });
     }
 
+    /**
+     * Perform login operation with user input <code>username</code> and <code>password</code>
+     *
+     * @return true if succeed otherwise return false
+     */
     private boolean login() {
         username = usernameField.getText().strip();
         password = passwordField.getText().strip();
@@ -119,6 +165,11 @@ public class LoginPanel extends JPanel {
         return false;
     }
 
+    /**
+     * Perform sign up operation with user input <code>username</code> and <code>password</code>
+     *
+     * @return true if succeed otherwise return false
+     */
     private boolean signUp() {
         username = usernameField.getText().strip();
         password = passwordField.getText().strip();
@@ -133,10 +184,20 @@ public class LoginPanel extends JPanel {
         return false;
     }
 
+    /**
+     * Return the logged in username or the registered username
+     *
+     * @return username
+     */
     String getUsername() {
         return username;
     }
 
+    /**
+     * Return password of logged in user or the registered user
+     *
+     * @return password
+     */
     String getPassword() {
         return password;
     }
