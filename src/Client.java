@@ -1,8 +1,6 @@
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
@@ -18,7 +16,7 @@ import java.util.StringTokenizer;
  * Client entry class
  * To start client: run Client#main
  *
- * @author Yirany
+ * @author 余天予
  */
 public class Client {
 
@@ -51,7 +49,7 @@ public class Client {
      * Start with login
      */
     private Client() {
-        startLogin();
+        startWithLogin();
         // initClientUI();
         // addListeners();
     }

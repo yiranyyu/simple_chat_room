@@ -1,7 +1,7 @@
 /**
  * Store the user information need to be displayed in GUI
  *
- * @author Yirany
+ * @author 余天予
  */
 class User {
     /**
@@ -19,12 +19,12 @@ class User {
         this.ip = ip;
     }
 
-    void setName(String name) {
-        this.name = name;
-    }
-
     String getName() {
         return name;
+    }
+
+    void setName(String name) {
+        this.name = name;
     }
 
     String getIp() {

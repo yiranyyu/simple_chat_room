@@ -17,7 +17,7 @@ import java.util.StringTokenizer;
  * Server program entry
  * To start server: run <code>Server#main</code>
  *
- * @author Yirany
+ * @author 余天予
  */
 public class Server {
     private JFrame frame;

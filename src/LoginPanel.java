@@ -2,16 +2,16 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 
 /**
  * Log in interface of client
+ *
+ * @author 余天予
  */
 public class LoginPanel extends JPanel {
-    private static final long serialVersionUID = 1L;
     static final int WIDTH = 300;
     static final int HEIGHT = 150;
+    private static final long serialVersionUID = 1L;
     private JFrame frame;
     private JTextField usernameField = new JTextField(15);
     private JTextField passwordField = new JTextField(15);
@@ -141,7 +141,7 @@ public class LoginPanel extends JPanel {
         signupButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (signup()) {
+                if (signUp()) {
                     LoginPanel.this.setEnabled(false);
                 }
             }
@@ -181,7 +181,7 @@ public class LoginPanel extends JPanel {
         } catch (UserAlreadyExistsException e) {
             JOptionPane.showMessageDialog(this, e.getMessage());
         } catch (DatabaseInsertFailException e) {
-        	JOptionPane.showMessageDialog(this, e.getMessage());
+            JOptionPane.showMessageDialog(this, e.getMessage());
         }
         return false;
     }
