@@ -14,8 +14,7 @@ import java.util.ArrayList;
 import java.util.StringTokenizer;
 
 /**
- * Server program entry
- * To start server: run <code>Server#main</code>
+ * Server program entry To start server: run <code>Server#main</code>
  *
  * @author 余天予
  */
@@ -34,7 +33,7 @@ public class Server {
     private JScrollPane chatListScroll;
 
     private JList<String> userList;
-    private DefaultListModel<String> listModel;
+    private DefaultListModel<String> userListModel;
     private boolean isStart = false;
 
     private ServerSocket serverSocket;
@@ -73,8 +72,8 @@ public class Server {
      * Init the input Panel of server program
      */
     private void initInputPanel() {
-        listModel = new DefaultListModel<>();
-        userList = new JList<>(listModel);
+        userListModel = new DefaultListModel<>();
+        userList = new JList<>(userListModel);
         txt_message = new JTextField();
         btn_send = new JButton("发送");
         inputPanel = new JPanel(new BorderLayout());
@@ -167,7 +166,7 @@ public class Server {
         // 单击启动服务器按钮时事件
         btn_start.addActionListener(e -> {
             if (isStart) {
-                JOptionPane.showMessageDialog(frame, "服务器已处于启动状态，不要重复启动！", "错误", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(frame, "服务器已处于启动状态，不要重复启动！", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             int max;
@@ -197,14 +196,14 @@ public class Server {
                 txt_port.setEnabled(false);
                 btn_stop.setEnabled(true);
             } catch (Exception exc) {
-                JOptionPane.showMessageDialog(frame, exc.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(frame, exc.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 
         // 单击停止服务器按钮时事件
         btn_stop.addActionListener(e -> {
             if (!isStart) {
-                JOptionPane.showMessageDialog(frame, "服务器还未启动，无需停止！", "错误", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(frame, "服务器还未启动，无需停止！", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             try {
@@ -216,7 +215,7 @@ public class Server {
                 contentArea.append("服务器成功停止!\r\n");
                 JOptionPane.showMessageDialog(frame, "服务器成功停止！");
             } catch (Exception exc) {
-                JOptionPane.showMessageDialog(frame, "停止服务器发生异常！", "错误", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(frame, "停止服务器发生异常！", "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
     }
@@ -226,26 +225,27 @@ public class Server {
      */
     private void sendServerMessageToAllUsers() {
         if (!isStart) {
-            JOptionPane.showMessageDialog(frame, "服务器还未启动,不能发送消息！", "错误", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(frame, "请先启动服务器", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
         if (clientThreads.size() == 0) {
-            JOptionPane.showMessageDialog(frame, "没有用户在线,不能发送消息！", "错误", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(frame, "没有任何用户在线！", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
         String message = txt_message.getText().trim();
         if (message.equals("")) {
-            JOptionPane.showMessageDialog(frame, "消息不能为空！", "错误", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(frame, "请先输入消息", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
         sendServerMessageToAllUsersImpl(message);
-        contentArea.append("服务器说：" + txt_message.getText() + "\r\n");
+        contentArea.append("服务器：" + txt_message.getText() + "\r\n");
         txt_message.setText(null);
     }
 
     /**
      * Start the backend of server
-     * @param max the maximum of available users
+     *
+     * @param max  the maximum of available users
      * @param port the port to listening the message from users
      * @throws java.net.BindException if fail to bind the socket
      */
@@ -258,7 +258,7 @@ public class Server {
             isStart = true;
         } catch (BindException e) {
             isStart = false;
-            throw new BindException("端口号已被占用，请换一个！");
+            throw new BindException(String.format("% 端口已被占用", port));
         } catch (Exception e1) {
             e1.printStackTrace();
             isStart = false;
@@ -268,6 +268,7 @@ public class Server {
 
     /**
      * release client thread listening resource
+     *
      * @param i the index of client thread to free withi
      * @throws IOException if error occurred
      */
@@ -290,16 +291,15 @@ public class Server {
                 serverThread.stop();
             }
             for (int i = clientThreads.size() - 1; i >= 0; i--) {
-                // 给所有在线用户发送关闭命令
                 clientThreads.get(i).getWriter().println("CLOSE");
                 clientThreads.get(i).getWriter().flush();
                 releaseClientThreadResource(i);
             }
 
             if (serverSocket != null) {
-                serverSocket.close();// 关闭服务器端连接
+                serverSocket.close();
             }
-            listModel.removeAllElements();// 清空用户列表
+            userListModel.removeAllElements();
             isStart = false;
         } catch (IOException e) {
             e.printStackTrace();
@@ -309,6 +309,7 @@ public class Server {
 
     /**
      * send message to all users
+     *
      * @param message message to send with
      */
     private void sendServerMessageToAllUsersImpl(String message) {
@@ -326,8 +327,10 @@ public class Server {
         private int maxUserNumber;
 
         /**
-         * Construct server thread with server socket to listening and max number of users
-         * @param serverSocket socket to listening from
+         * Construct server thread with server socket to listening and max number of
+         * users
+         *
+         * @param serverSocket  socket to listening from
          * @param maxUserNumber max number of available users
          */
         ServerThread(ServerSocket serverSocket, int maxUserNumber) {
@@ -353,7 +356,7 @@ public class Server {
                         User user = new User(st.nextToken(), st.nextToken());
 
                         // 反馈连接成功信息
-                        w.println("MAX@服务器：对不起，" + user.getName() + user.getIp() + "，服务器在线人数已达上限，请稍后尝试连接！");
+                        w.println("MAX@服务器：对不起，" + user.getName() + user.getIp() + "，在线人数已达上限，请稍后尝试连接！");
                         w.flush();
 
                         // 释放资源
@@ -363,9 +366,9 @@ public class Server {
                         continue;
                     }
                     SingleClientThread client = new SingleClientThread(socket);
-                    client.start();// 开启对此客户端服务的线程
+                    client.start();
                     clientThreads.add(client);
-                    listModel.addElement(client.getUser().getName());// 更新在线列表
+                    userListModel.addElement(client.getUser().getName());// 更新在线列表
                     contentArea.append(client.getUser().getName() + client.getUser().getIp() + "上线!\r\n");
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -385,6 +388,7 @@ public class Server {
 
         /**
          * Init with the socket bind with client
+         *
          * @param socket to listen from
          */
         SingleClientThread(Socket socket) {
@@ -437,8 +441,8 @@ public class Server {
             String message;
             while (true) {
                 try {
-                    message = reader.readLine();    // 接收客户端消息
-                    if (message.equals("CLOSE"))    // 下线命令
+                    message = reader.readLine(); // 接收客户端消息
+                    if (message.equals("CLOSE")) // 下线命令
                     {
                         contentArea.append(this.getUser().getName() + this.getUser().getIp() + "下线!\r\n");
                         // 断开连接释放资源
@@ -452,7 +456,7 @@ public class Server {
                             clientThreads.get(i).getWriter().flush();
                         }
 
-                        listModel.removeElement(user.getName());// 更新在线列表
+                        userListModel.removeElement(user.getName());// 更新在线列表
 
                         // 删除此条客户端服务线程
                         for (int i = clientThreads.size() - 1; i >= 0; i--) {
@@ -474,6 +478,7 @@ public class Server {
 
         /**
          * Dispatch message received from one client to other client(s)
+         *
          * @param message received message
          */
         void dispatcherMessage(String message) {

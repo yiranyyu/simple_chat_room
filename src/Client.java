@@ -13,8 +13,7 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 /**
- * Client entry class
- * To start client: run Client#main
+ * Client entry class To start client: run Client#main
  *
  * @author 余天予
  */
@@ -44,14 +43,11 @@ public class Client {
     private MessageListenerThread messageListenerThread;// 负责接收消息的线程
     private Map<String, User> onlineUsers = new HashMap<>();// 所有在线用户
 
-
     /**
      * Start with login
      */
     private Client() {
         startWithLogin();
-        // initClientUI();
-        // addListeners();
     }
 
     /**
@@ -94,8 +90,8 @@ public class Client {
     }
 
     /**
-     * Init the configuration of status panel which shows the network configuration and
-     * user information.
+     * Init the configuration of status panel which shows the network configuration
+     * and user information.
      */
     private void initConnectionStatusPanel() {
         txt_port = new JTextField("端口号");
@@ -129,7 +125,8 @@ public class Client {
     }
 
     /**
-     * Init chat list which displays the currently available users to communicate with
+     * Init chat list which displays the currently available users to communicate
+     * with
      */
     private void initChatListScroll() {
         userListModel = new DefaultListModel<>();
@@ -337,8 +334,8 @@ public class Client {
         private JTextArea textArea;
 
         /**
-         * Construct with read to listening from and <code>textArea</code> to show received
-         * message
+         * Construct with read to listening from and <code>textArea</code> to show
+         * received message
          *
          * @param reader   read message from server
          * @param textArea show received message
@@ -401,7 +398,7 @@ public class Client {
                             break;
                         case "MAX":
                             textArea.append(msgTokenizer.nextToken() + msgTokenizer.nextToken() + "\r\n");
-                            closeConnectionPassively();// 被动的关闭连接
+                            closeConnectionPassively();
                             JOptionPane.showMessageDialog(frame, "服务器缓冲区已满！", "错误", JOptionPane.ERROR_MESSAGE);
                             return;
                         default:
