@@ -10,9 +10,13 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.*;
+
+import static net.sf.json.JSONArray.toArray;
+import static net.sf.json.JSONArray.toCollection;
 
 /**
  * Client entry class To start client: run Client#main
@@ -33,7 +37,6 @@ public class Client {
     private JScrollPane dialogueScroll;
     private JScrollPane chatListScroll;
 
-    private ArrayList<UserTab> userList;
     private UserTab activeTab;
     private boolean isConnected = false;
 
@@ -56,11 +59,14 @@ public class Client {
         JLabel lastMessage;
 
         UserTab(String user) {
-            super(new GridLayout(2, 1));
-            super.add(new JLabel(user));
+            super(new GridLayout(3, 1));
+            JLabel userLabel = new JLabel(user);
+            userLabel.setFont(userLabel.getFont().deriveFont(26.5f));
+            super.add(userLabel);
             messageList = new ArrayList<>();
             lastMessage = new JLabel();
             super.add(lastMessage);
+            super.add(new JSeparator());
             this.user = user;
             text = "";
 
@@ -93,93 +99,37 @@ public class Client {
         }
     }
 
-    private synchronized void drawMessage(Message message) {
-        textArea.append(message.getSender() + " " + message.getTime() + "\n");
-        textArea.append(message.getText() + "\n");
-        textArea.append("\n");
-    }
-
-    private synchronized void setActiveTab(UserTab tab){
-        activeTab.text = textField.getText();
-        textArea.setText("");
-        activeTab = tab;
-        textField.setText(tab.text);
-        frame.setTitle(user+" 与 "+tab.user+" 的聊天");
-        for (Message message : tab.messageList) {
-            drawMessage(message);
-        }
-    }
-
-    /**
-     * The panel changes after a message has been received.
-     *
-     * @param message the message received.
-     */
-
-    private synchronized void messageRecieved(Message message) {
-        if (user == message.getReceiver()) {
-            for (Component component : chatListPanel.getComponents()) {
-                UserTab tabUser = (UserTab) component;
-                if (tabUser.user == message.getSender()) {
-                    updateMessage(tabUser, message);
-                    break;
-                }
-            }
-            UserTab tabUser = new UserTab(message.getSender());
-            tabUser.messageList.add(message);
-            tabUser.lastMessage.setText(message.getText());
-            chatListPanel.add(tabUser, 0);
-        }
-    }
-
-    /**
-     * The panel changes after a message has been sent.
-     *
-     * @param message The message sent.
-     */
-    private synchronized void messageSent(Message message) {
-        for (Component component : chatListPanel.getComponents()) {
-            UserTab tabUser = (UserTab) component;
-            if (tabUser.user == message.getReceiver()) {
-                updateMessage(tabUser, message);
-                break;
-            }
-        }
-    }
-
-    /**
-     * Update a new message for a tab
-     * @param tabUser the user tab.
-     * @param message the message.
-     */
-    private void updateMessage(UserTab tabUser, Message message) {
-        tabUser.messageList.add(message);
-        tabUser.lastMessage.setText(message.getText());
-        chatListPanel.remove(tabUser);
-        chatListPanel.add(tabUser, 0);
-        if (tabUser == activeTab) {
-            drawMessage(message);
-        }
-    }
-
-    /**
-     * Don't know how to get user by id
-     */
-    private User getUserById(int id) throws UserNotExistsException{
-        //TODO:
-        return null;
-    }
-
     /**
      * Start with login
      */
     private Client() {
-        //startWithLogin();
-        user = "aaaa";
-        userList = new ArrayList<>();
-
+        startWithLogin();
         initClientUI();
         addListeners();
+    }
+
+    /**
+     *Used to debug
+     * @param debug should not work when false
+     */
+    private Client(boolean debug){
+        if(debug){
+            user = "aaaa";
+            initClientUI();
+            UserTab tab1 = new UserTab("gkd");
+            UserTab tab2 = new UserTab("kkp");
+            chatListPanel.add(tab1);
+            chatListPanel.add(tab2);
+            messageRecieved(new Message("gkd","aaaa","2222rrr","2133124e2"));
+            messageRecieved(new Message("kkp","aaaa","we32rrr","ert4eesrijuhwe"));
+            messageRecieved(new Message("kkp","yghu","we32rrr","eriopkjiot4e"));
+            messageSent(new Message("aaaa","kkp","we32rrr","ert4eesjklnrwe"));
+            messageSent(new Message("aaaa","kkp","we32rrr","ert4eesklmnrwe"));
+            txtId.setText("dddd");
+            addUser();
+            addListeners();
+        }
+        else throw new RuntimeException();
     }
 
     /**
@@ -188,13 +138,9 @@ public class Client {
      * @param args will be ignored
      */
     public static void main(String[] args) {
-        new Client();
+        new Client(true);
     }
 
-    /**
-     * Called by constructor to start to client program
-     * TODO: Login?
-     */
     private void startWithLogin() {
         LoginPanel loginPanel = new LoginPanel();
         loginPanel.startShow();
@@ -206,9 +152,7 @@ public class Client {
             }
         }
         System.out.println("Logged in!");
-        String username = loginPanel.getUsername();
-        String password = loginPanel.getPassword();
-        user = username;
+        user = loginPanel.getUsername();
         initClientUI();
         addListeners();
     }
@@ -258,7 +202,7 @@ public class Client {
         //userList = new JList<>(userListModel);
         chatListPanel = new JPanel(new GridLayout(256, 1));
         chatListScroll = new JScrollPane(chatListPanel);
-        chatListScroll.setBorder(new TitledBorder("对象列表"));
+        chatListScroll.setBorder(new TitledBorder("会话列表"));
     }
 
     /**
@@ -286,11 +230,8 @@ public class Client {
 
         int screen_width = Toolkit.getDefaultToolkit().getScreenSize().width;
         int screen_height = Toolkit.getDefaultToolkit().getScreenSize().height;
-        frame = new JFrame(user+ "的聊天");
-        // 更改JFrame的图标：
-        // frame.setIconImage(Toolkit.getDefaultToolkit().createImage(Client.class.getResource("qq.png")));
+        frame = new JFrame(user + "的聊天");
         frame.setLayout(new BorderLayout());
-        //frame.add(connectionStatusPanel, "North");
         frame.add(centerSplit, "Center");
         frame.setSize(1024, 768);
         frame.setLocation((screen_width - frame.getWidth()) / 2, (screen_height - frame.getHeight()) / 2);
@@ -307,40 +248,8 @@ public class Client {
         // 单击发送按钮时事件
         btn_send.addActionListener(e -> sendMessage());
         //
-        btnAdd.addActionListener(e -> {
-            String userName;
-            try {
-                try {
-                    userName = txtId.getText().trim();
-                } catch (NumberFormatException ex000) {
-                    throw new Exception("ID应为整数！");
-                }
-                /*
-                try {
-                    //TODO: check if the user exist
-
-                } catch (UserNotExistsException ex){
-                    throw new Exception("用户不存在");
-                }
-                */
-                for(Component component:chatListPanel.getComponents()){
-                    UserTab tabUser = (UserTab) component;
-                    if(tabUser.user.equals(userName)){
-                        setActiveTab(tabUser);
-                        txtId.setText("");
-                        return;
-                    }
-                }
-
-
-
-
-
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(frame, ex.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
-            }
-            //TODO:userList.add(new UserTab());
-        });
+        btnAdd.addActionListener(e -> addUser());
+        txtId.addActionListener(e -> addUser());
 
         // 关闭窗口时事件
         frame.addWindowListener(new WindowAdapter() {
@@ -353,23 +262,149 @@ public class Client {
         });
     }
 
+    private void addUser(){
+        String userName;
+        try {
+            userName = txtId.getText().trim();
+            if (!API.containsName(userName)) {
+                JOptionPane.showMessageDialog(frame, "目标用户不存在", "错误", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            for (Component component : chatListPanel.getComponents()) {
+                UserTab tabUser = (UserTab) component;
+                if (tabUser.user.equals(userName)) {
+                    setActiveTab(tabUser);
+                    txtId.setText("");
+                    return;
+                }
+            }
+            ArrayList<Message> msgList;
+            msgList = new ArrayList<Message>(toCollection(API.pullMessageList(user,userName),Message.class));
+            msgList.sort((Message o1, Message o2)->{
+                Timestamp ts1 = Timestamp.valueOf(o1.getTime());
+                Timestamp ts2 = Timestamp.valueOf(o2.getTime());
+                if(ts1.before(ts2))
+                    return -1;
+                else if(ts1.after(ts2))
+                    return 1;
+                else
+                    return 0;
+            });
+            UserTab newTab = new UserTab(userName);
+            chatListPanel.add(newTab);
+            setActiveTab(newTab);
+            chatListPanel.validate();
+            for(Message m :msgList){
+                newTab.messageList.add(m);
+                drawMessage(m);
+            }
+            txtId.setText("");
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private synchronized void drawMessage(Message message) {
+        textArea.append(message.getSender() + " " + message.getTime() + "\n");
+        textArea.append(message.getText() + "\n");
+        textArea.append("\n");
+    }
+
+    private synchronized void setActiveTab(UserTab tab) {
+        if(activeTab!=null)activeTab.text = textField.getText();
+        textArea.setText("");
+        activeTab = tab;
+        textField.setText(tab.text);
+        frame.setTitle(user + " 与 " + tab.user + " 的聊天");
+        for (Message message : tab.messageList) {
+            drawMessage(message);
+        }
+        chatListPanel.validate();
+    }
+
+    /**
+     * The panel changes after a message has been received.
+     *
+     * @param message the message received.
+     */
+
+    private synchronized void messageRecieved(Message message) {
+        if (user.equals(message.getReceiver())) {
+            for (Component component : chatListPanel.getComponents()) {
+                UserTab tabUser = (UserTab) component;
+                if (tabUser.user.equals(message.getSender())) {
+                    updateMessage(tabUser, message);
+                    return;
+                }
+            }
+            UserTab tabUser = new UserTab(message.getSender());
+            tabUser.messageList.add(message);
+            tabUser.lastMessage.setText(message.getText());
+            chatListPanel.add(tabUser, 0);
+        }
+    }
+
+    /**
+     * The panel changes after a message has been sent.
+     *
+     * @param message The message sent.
+     */
+    private synchronized void messageSent(Message message) {
+        for (Component component: chatListPanel.getComponents()) {
+            UserTab tabUser = (UserTab) component;
+            if (tabUser.user.equals(message.getReceiver())) {
+                updateMessage(tabUser, message);
+                return;
+            }
+        }
+    }
+
+    /**
+     * Update a new message for a tab
+     *
+     * @param tabUser the user tab.
+     * @param message the message.
+     */
+    private void updateMessage(UserTab tabUser, Message message) {
+        tabUser.messageList.add(message);
+        tabUser.lastMessage.setText(message.getText().replaceAll("\\s+"," "));
+        chatListPanel.remove(tabUser);
+        chatListPanel.add(tabUser, 0);
+        if (tabUser == activeTab) {
+            drawMessage(message);
+        }
+        chatListPanel.validate();
+    }
+
     /**
      * Sent current input to all users
      */
     private void sendMessage() {
-        if (!isConnected) {
-            JOptionPane.showMessageDialog(frame, "还没有连接服务器，无法发送消息！", "错误", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        String message = textField.getText().trim();
-        if (message.equals("")) {
+
+        String messageText = textField.getText().trim();
+        if (messageText.equals("")) {
             JOptionPane.showMessageDialog(frame, "消息不能为空！", "错误", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        sendMessageToServer(frame.getTitle() + "@" + "ALL" + "@" + message);
+        Message message = new Message(user,activeTab.user,Timestamp.from(Instant.now()).toString(),messageText);
+        try {
+            try {
+                API.sendmsg(user, activeTab.user, messageText);
+            } catch (UserNotExistsException ex){
+                throw new Exception("绘画对象不存在");
+            }
+
+            //TODO：广播与相关异常
+            messageSent(message);
+        }catch (Exception ex){
+            JOptionPane.showMessageDialog(frame, ex.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+        }
+
         textField.setText(null);
     }
 
+
+    //TODO: 监听信息，并调用messageReceived(Message message)方法
     /**
      * Try to connect to server
      *
