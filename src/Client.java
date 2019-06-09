@@ -21,7 +21,7 @@ import static net.sf.json.JSONArray.toCollection;
 /**
  * Client entry class To start client: run Client#main
  *
- * @author 余天予
+ * @author 王潜
  */
 public class Client {
 
