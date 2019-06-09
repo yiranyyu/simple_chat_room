@@ -315,12 +315,14 @@ public class Client {
                 } catch (NumberFormatException ex000) {
                     throw new Exception("ID应为整数！");
                 }
+                /*
                 try {
                     //TODO: check if the user exist
 
                 } catch (UserNotExistsException ex){
                     throw new Exception("用户不存在");
                 }
+                */
                 for(Component component:chatListPanel.getComponents()){
                     UserTab tabUser = (UserTab) component;
                     if(tabUser.user.equals(userName)){

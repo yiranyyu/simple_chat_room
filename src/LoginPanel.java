@@ -155,8 +155,8 @@ public class LoginPanel extends JPanel {
      * @return true if succeed otherwise return false
      */
     private boolean login() {
-        username = usernameField.getText().strip();
-        password = passwordField.getText().strip();
+        username = usernameField.getText().trim();
+        password = passwordField.getText().trim();
         try {
             API.login(username, password);
             return true;
@@ -174,8 +174,8 @@ public class LoginPanel extends JPanel {
      * @return true if succeed otherwise return false
      */
     private boolean signUp() {
-        username = usernameField.getText().strip();
-        password = passwordField.getText().strip();
+        username = usernameField.getText().trim();
+        password = passwordField.getText().trim();
         try {
             API.signup(username, password);
             return true;
