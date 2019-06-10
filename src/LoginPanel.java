@@ -9,8 +9,8 @@ import java.awt.*;
 public class LoginPanel extends JPanel {
     private static final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
     private static final long serialVersionUID = 1L;
-    private static final int WIDTH = (int) (screenSize.width / 4.2);
-    private static final int HEIGHT = WIDTH / 2;
+    private static final int WIDTH = 300;
+    private static final int HEIGHT = 150;
     private JFrame frame;
     private JTextField usernameField = new JTextField(15);
     private JTextField passwordField = new JTextField(15);
@@ -55,6 +55,7 @@ public class LoginPanel extends JPanel {
      * Init layout of components in panel
      */
     private void initLayout() {
+        System.out.println(WIDTH + ", " + HEIGHT);
         add(new JLabel("登录 / 注册"), constraints, 0, 0, 1, 1);
         add(new JLabel("用户名"), constraints, 1, 0, 1, 1);
         add(usernameField, constraints, 1, 1, 1, 2);
