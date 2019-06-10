@@ -24,6 +24,7 @@ import static net.sf.json.JSONArray.toCollection;
  * @author 王潜
  */
 public class Client {
+    private static final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
     private JFrame frame;
     private JTextArea textArea;
     private JTextField textField;
@@ -227,20 +228,24 @@ public class Client {
      * Draw the client main Frame
      */
     private void initClientFrame() {
-        JSplitPane eastSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, dialogueScroll, userInputPanel);
-        eastSplit.setDividerLocation(672);
-        JSplitPane westSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, chatListScroll, AddUserPanel);
-        westSplit.setDividerLocation(672);
-        JSplitPane centerSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, westSplit, eastSplit);
-        centerSplit.setDividerLocation(256);
+        double scale = 0.7;
+        int width = (int) (screenSize.width * scale);
+        int height = (int) (screenSize.height * scale);
+        int verticalSplit = (int) (height * 0.8);
+        int horizontalSplit = (int) (width * 0.2);
 
-        int screen_width = Toolkit.getDefaultToolkit().getScreenSize().width;
-        int screen_height = Toolkit.getDefaultToolkit().getScreenSize().height;
+        JSplitPane eastSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, dialogueScroll, userInputPanel);
+        eastSplit.setDividerLocation(verticalSplit);
+        JSplitPane westSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, chatListScroll, AddUserPanel);
+        westSplit.setDividerLocation(verticalSplit);
+        JSplitPane centerSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, westSplit, eastSplit);
+        centerSplit.setDividerLocation(horizontalSplit);
+
         frame = new JFrame(user + "的聊天");
         frame.setLayout(new BorderLayout());
         frame.add(centerSplit, "Center");
-        frame.setSize(1024, 768);
-        frame.setLocation((screen_width - frame.getWidth()) / 2, (screen_height - frame.getHeight()) / 2);
+        frame.setSize(width, height);
+        frame.setLocation((screenSize.width - frame.getWidth()) / 2, (screenSize.height - frame.getHeight()) / 2);
         frame.setVisible(true);
     }
 
