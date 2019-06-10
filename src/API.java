@@ -13,7 +13,7 @@ public class API {
 
     public static JSONArray login(String username, String password)
             throws UserNotExistsException, PasswordErrorException {
-//        System.out.printf("Try login with %s %s\n", username, password);
+        // System.out.printf("Try login with %s %s\n", username, password);
         return psql.Login(username, password);
     }
 
@@ -23,8 +23,10 @@ public class API {
     }
 
     public static void sendmsg(String sendername, String receivername, String content)
-            throws UserNotExistsException {
-        psql.SendMsg(sendername, receivername, content);
+            throws UserNotExistsException, DatabaseInsertFailException {
+        if (!psql.SendMsg(sendername, receivername, content)) {
+            throw new DatabaseInsertFailException();
+        }
     }
 }
 

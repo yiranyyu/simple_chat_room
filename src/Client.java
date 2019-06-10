@@ -363,6 +363,8 @@ public class Client {
                 API.sendmsg(user, activeTab.user, messageText);
             } catch (UserNotExistsException ex) {
                 throw new Exception("会话对象不存在");
+            } catch (DatabaseInsertFailException e){
+                System.out.println("Error");
             }
 
             sendMessageToServer(user + "@" + activeTab.user + "@" + messageText);
