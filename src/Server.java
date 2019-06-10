@@ -343,20 +343,21 @@ public class Server {
          * work entry of server thread
          */
         public void run() {
+            System.out.println("Start server thread.");
             while (true) {
                 try {
                     Socket socket = serverSocket.accept();
+                    System.out.println("Find new client");
 
                     if (clientThreads.size() == maxUserNumber) {
                         BufferedReader r = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                         PrintWriter w = new PrintWriter(socket.getOutputStream());
 
                         // 接收客户端的基本用户信息
-                        String inf = r.readLine();
-                        StringTokenizer st = new StringTokenizer(inf, "@");
+                        String clientInfo = r.readLine();
+                        StringTokenizer st = new StringTokenizer(clientInfo, "@");
                         User user = new User(st.nextToken(), st.nextToken());
 
-                        // 反馈连接成功信息
                         w.println("MAX@服务器：对不起，" + user.getName() + user.getIp() + "，在线人数已达上限，请稍后尝试连接！");
                         w.flush();
 
@@ -366,11 +367,12 @@ public class Server {
                         socket.close();
                         continue;
                     }
-                    SingleClientThread client = new SingleClientThread(socket);
-                    client.start();
-                    clientThreads.add(client);
-                    userListModel.addElement(client.getUser().getName());// 更新在线列表
-                    contentArea.append(client.getUser().getName() + client.getUser().getIp() + "上线!\r\n");
+
+                    SingleClientThread clientService = new SingleClientThread(socket);
+                    clientService.start();
+                    clientThreads.add(clientService);
+                    userListModel.addElement(clientService.getUser().getName());// 更新在线列表
+                    contentArea.append(clientService.getUser().getName() + clientService.getUser().getIp() + "上线!\r\n");
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -398,8 +400,8 @@ public class Server {
                 reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 writer = new PrintWriter(socket.getOutputStream());
                 // 接收客户端的基本用户信息
-                String inf = reader.readLine();
-                StringTokenizer st = new StringTokenizer(inf, "@");
+                String clientInfo = reader.readLine();
+                StringTokenizer st = new StringTokenizer(clientInfo, "@");
                 user = new User(st.nextToken(), st.nextToken());
                 // 反馈连接成功信息
                 writer.println(user.getName() + user.getIp() + "与服务器连接成功!");
@@ -471,8 +473,13 @@ public class Server {
                     } else {
                         dispatcherMessage(message);
                     }
-                } catch(SocketException e){
+                } catch (SocketException e) {
                     System.out.println("Socket Error! Client thread will be closed!");
+                    try {
+                        releaseClientThreadResource(clientThreads.indexOf(this));
+                    } catch (IOException __) {
+                        JOptionPane.showMessageDialog(frame, "网络状况异常，请检查日志", "错误", JOptionPane.ERROR_MESSAGE);
+                    }
                     return;
                 } catch (IOException e) {
                     e.printStackTrace();

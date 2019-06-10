@@ -10,10 +10,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.SocketException;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static net.sf.json.JSONArray.toCollection;
@@ -52,56 +53,6 @@ public class Client {
     private String user;
 
     /**
-     * The tabs on classes
-     */
-    private class UserTab extends JPanel {
-        String user;
-        ArrayList<Message> messageList;
-        String text;
-        JLabel lastMessage;
-
-        UserTab(String user) {
-            super(new GridLayout(3, 1));
-            JLabel userLabel = new JLabel(user);
-            userLabel.setFont(userLabel.getFont().deriveFont(26.5f));
-            super.add(userLabel);
-            messageList = new ArrayList<>();
-            lastMessage = new JLabel();
-            super.add(lastMessage);
-            super.add(new JSeparator());
-            this.user = user;
-            text = "";
-
-            addListeners();
-        }
-
-        private void addListeners() {
-            super.addMouseListener(new MouseListener() {
-                @Override
-                public synchronized void mouseClicked(MouseEvent e) {
-                    setActiveTab(UserTab.this);
-                }
-
-                @Override
-                public void mousePressed(MouseEvent e) {
-                }
-
-                @Override
-                public void mouseReleased(MouseEvent e) {
-                }
-
-                @Override
-                public void mouseEntered(MouseEvent e) {
-                }
-
-                @Override
-                public void mouseExited(MouseEvent e) {
-                }
-            });
-        }
-    }
-
-    /**
      * Start with login
      */
     private Client() {
@@ -131,7 +82,8 @@ public class Client {
             txtId.setText("dddd");
             addUser();
             addListeners();
-        } else throw new RuntimeException();
+        } else
+            throw new RuntimeException();
     }
 
     /**
@@ -141,6 +93,10 @@ public class Client {
      */
     public static void main(String[] args) {
         new Client();
+    }
+
+    private void showUI() {
+        frame.setVisible(true);
     }
 
     private void startWithLogin() {
@@ -155,10 +111,11 @@ public class Client {
         }
         System.out.println("Logged in!");
         user = loginPanel.getUsername();
-        if(!connectServer(6666, "localhost", user)){
+        initClientUI();
+        if (!connectServer(6666, "localhost", user)) {
             return;
         }
-        initClientUI();
+        showUI();
         addListeners();
     }
 
@@ -203,8 +160,8 @@ public class Client {
      * with
      */
     private void initChatListScroll() {
-        //userListModel = new DefaultListModel<>();
-        //userList = new JList<>(userListModel);
+        // userListModel = new DefaultListModel<>();
+        // userList = new JList<>(userListModel);
         chatListPanel = new JPanel(new GridLayout(256, 1));
         chatListScroll = new JScrollPane(chatListPanel);
         chatListScroll.setBorder(new TitledBorder("会话列表"));
@@ -246,9 +203,7 @@ public class Client {
         frame.add(centerSplit, "Center");
         frame.setSize(width, height);
         frame.setLocation((screenSize.width - frame.getWidth()) / 2, (screenSize.height - frame.getHeight()) / 2);
-        frame.setVisible(true);
     }
-
 
     /**
      * Add listeners to the window and components in ti.
@@ -290,7 +245,8 @@ public class Client {
                 }
             }
             List<Message> msgList;
-            msgList = (List<Message>) toCollection(API.pullMessageList(user, userName), MessageDB.class).stream().map(o -> new Message((MessageDB) o)).collect(Collectors.toList());
+            msgList = (List<Message>) toCollection(API.pullMessageList(user, userName), MessageDB.class).stream()
+                    .map(o -> new Message((MessageDB) o)).collect(Collectors.toList());
             msgList.sort((Message o1, Message o2) -> {
                 Timestamp ts1 = Timestamp.valueOf(o1.getTime());
                 Timestamp ts2 = Timestamp.valueOf(o2.getTime());
@@ -323,7 +279,8 @@ public class Client {
     }
 
     private synchronized void setActiveTab(UserTab tab) {
-        if (activeTab != null) activeTab.text = textField.getText();
+        if (activeTab != null)
+            activeTab.text = textField.getText();
         textArea.setText("");
         textField.setEnabled(true);
         btn_send.setEnabled(true);
@@ -338,7 +295,6 @@ public class Client {
 
     /**
      * The panel changes after a message has been received.
-     *
      *
      * @param message the message received.
      */
@@ -409,7 +365,7 @@ public class Client {
                 throw new Exception("会话对象不存在");
             }
 
-            sendMessageToServer(encoder.encodeToString(user.getBytes()) + "@" + encoder.encodeToString(activeTab.user.getBytes()) + "@" + encoder.encodeToString(messageText.getBytes()));
+            sendMessageToServer(user + "@" + activeTab.user + "@" + messageText);
             messageSent(message);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(frame, ex.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
@@ -417,9 +373,6 @@ public class Client {
 
         textField.setText(null);
     }
-
-
-
 
     /**
      * Try to connect to server
@@ -434,15 +387,16 @@ public class Client {
             socket = new Socket(hostIp, port);// 根据端口号和服务器ip建立连接
             writer = new PrintWriter(socket.getOutputStream());
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            // 发送客户端用户基本信息(用户名和ip地址)
-            sendMessageToServer(encoder.encodeToString(name.getBytes()) + "@" + socket.getLocalAddress().toString());
+            // 发送客户端用户基本信息(用户名和 ip 地址)
+            sendMessageToServer(name + "@" + socket.getLocalAddress().toString());
             // 开启接收消息的线程
             messageListenerThread = new MessageListenerThread(reader, textArea);
             messageListenerThread.start();
             isConnected = true;
             return true;
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(frame, "与端口号为：" + port + "    IP地址为：" + hostIp + " 的服务器连接失败! 请检查您的配置", "错误", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(frame, "与端口号为：" + port + "    IP地址为：" + hostIp + " 的服务器连接失败! 请检查您的配置", "错误",
+                    JOptionPane.ERROR_MESSAGE);
             isConnected = false;
             return false;
         }
@@ -494,7 +448,59 @@ public class Client {
             return false;
         }
     }
-//TODO: 监听信息，并调用messageReceived(Message message)方法
+
+    /**
+     * The tabs on classes
+     */
+    private class UserTab extends JPanel {
+        String user;
+        ArrayList<Message> messageList;
+        String text;
+        JLabel lastMessage;
+
+        UserTab(String user) {
+            super(new GridLayout(3, 1));
+            JLabel userLabel = new JLabel(user);
+            userLabel.setFont(userLabel.getFont().deriveFont(26.5f));
+            super.add(userLabel);
+            messageList = new ArrayList<>();
+            lastMessage = new JLabel();
+            super.add(lastMessage);
+            super.add(new JSeparator());
+            this.user = user;
+            text = "";
+
+            addListeners();
+        }
+
+        private void addListeners() {
+            super.addMouseListener(new MouseListener() {
+                @Override
+                public synchronized void mouseClicked(MouseEvent e) {
+                    setActiveTab(UserTab.this);
+                }
+
+                @Override
+                public void mousePressed(MouseEvent e) {
+                }
+
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                }
+
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                }
+            });
+        }
+    }
+
+    // TODO: 监听信息，并调用messageReceived(Message message)方法
+
     /**
      * Instance of this class will keep listening the message from server
      */
@@ -521,7 +527,7 @@ public class Client {
          */
         synchronized void closeConnectionPassively() throws Exception {
             // 清空用户列表
-            //userListModel.removeAllElements();
+            // userListModel.removeAllElements();
             // 被动的关闭连接释放资源
             releaseResource();
         }
@@ -535,9 +541,10 @@ public class Client {
             while (true) {
                 try {
                     message = reader.readLine();
+                    System.out.println("Message from server = " + message);
                     StringTokenizer msgTokenizer = new StringTokenizer(message, "@");
                     String command = msgTokenizer.nextToken();
-                    System.out.println("Get token=" + command);
+                    System.out.println("Get command=#" + command + "#");
                     switch (command) {
                         case "CLOSE":
                             textArea.append("服务器已关闭!\r\n");
@@ -548,13 +555,13 @@ public class Client {
                                     && (userIp = msgTokenizer.nextToken()) != null) {
                                 user = new User(username, userIp);
                                 onlineUsers.put(username, user);
-                                //userListModel.addElement(username);
+                                // userListModel.addElement(username);
                             }
                             break;
                         case "DELETE":
                             username = msgTokenizer.nextToken();
                             onlineUsers.remove(username);
-                            //userListModel.removeElement(username);
+                            // userListModel.removeElement(username);
                             break;
                         case "USERLIST":
                             int size = Integer.parseInt(msgTokenizer.nextToken());
@@ -563,7 +570,7 @@ public class Client {
                                 userIp = msgTokenizer.nextToken();
                                 user = new User(username, userIp);
                                 onlineUsers.put(username, user);
-                                //userListModel.addElement(username);
+                                // userListModel.addElement(username);
                             }
                             break;
                         case "MAX":
@@ -572,12 +579,13 @@ public class Client {
                             JOptionPane.showMessageDialog(frame, "服务器缓冲区已满！", "错误", JOptionPane.ERROR_MESSAGE);
                             return;
                         default:
+                            System.out.println("#" + textArea);
                             textArea.append(message + "\r\n");
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
+                } catch (SocketException e) {
+                    JOptionPane.showMessageDialog(frame, "网络状况异常，请检查并重新登录", "错误", JOptionPane.ERROR_MESSAGE);
+                    System.exit(1);
                 } catch (Exception e) {
-                    System.out.println(e.getMessage());
                     e.printStackTrace();
                 }
             }
