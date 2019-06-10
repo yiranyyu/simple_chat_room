@@ -1,7 +1,7 @@
 import net.sf.json.JSONArray;
 
 public class API {
-    private static ProcessSQL psql = new ProcessSQL();
+    public static ProcessSQL psql = new ProcessSQL();
 
     public static boolean containsName(String username) {
         return psql.ContainsName(username);

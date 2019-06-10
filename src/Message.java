@@ -17,6 +17,13 @@ public class Message {
         this.text = text;
     }
 
+    public Message(MessageDB message) {
+        this.sender = API.psql.findUsernameById(message.getSenderID());
+        this.receiver = API.psql.findUsernameById(message.getReceiverID());
+        this.time = message.getTime();
+        this.text = message.getText();
+    }
+
     /**
      * This method returns the username of receiver
      * @return the username of receiver

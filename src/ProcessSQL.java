@@ -198,6 +198,27 @@ public class ProcessSQL {
     }
 
     /**
+     * This method finds Id by username in database
+     *
+     * @param id id of user.
+     * @return String username of a user null means not exist.
+     */
+	public String findUsernameById(int id) {
+        if (id <= 0)
+            return null;
+        try {
+            String sql = String.format("SELECT username from User WHERE id = '%d'", id);
+            ResultSet rs = stmt.executeQuery(sql);
+            if (rs.next())
+                return rs.getString("username");
+            else
+                return null;
+        } catch (SQLException e) {
+        }
+        return null;
+    }
+
+    /**
      * This method inserts a user data to the database
      *
      * @param username username of a user.

@@ -13,6 +13,8 @@ import java.net.Socket;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static net.sf.json.JSONArray.toCollection;
 
@@ -22,7 +24,6 @@ import static net.sf.json.JSONArray.toCollection;
  * @author 王潜
  */
 public class Client {
-
     private JFrame frame;
     private JTextArea textArea;
     private JTextField textField;
@@ -109,27 +110,27 @@ public class Client {
     }
 
     /**
-     *Used to debug
+     * Used to debug
+     *
      * @param debug should not work when false
      */
-    private Client(boolean debug){
-        if(debug){
+    private Client(boolean debug) {
+        if (debug) {
             user = "aaaa";
             initClientUI();
             UserTab tab1 = new UserTab("gkd");
             UserTab tab2 = new UserTab("kkp");
             chatListPanel.add(tab1);
             chatListPanel.add(tab2);
-            messageRecieved(new Message("gkd","aaaa","2222rrr","2133124e2"));
-            messageRecieved(new Message("kkp","aaaa","we32rrr","ert4eesrijuhwe"));
-            messageRecieved(new Message("kkp","yghu","we32rrr","eriopkjiot4e"));
-            messageSent(new Message("aaaa","kkp","we32rrr","ert4eesjklnrwe"));
-            messageSent(new Message("aaaa","kkp","we32rrr","ert4eesklmnrwe"));
+            messageRecieved(new Message("gkd", "aaaa", "2222rrr", "2133124e2"));
+            messageRecieved(new Message("kkp", "aaaa", "we32rrr", "ert4eesrijuhwe"));
+            messageRecieved(new Message("kkp", "yghu", "we32rrr", "eriopkjiot4e"));
+            messageSent(new Message("aaaa", "kkp", "we32rrr", "ert4eesjklnrwe"));
+            messageSent(new Message("aaaa", "kkp", "we32rrr", "ert4eesklmnrwe"));
             txtId.setText("dddd");
             addUser();
             addListeners();
-        }
-        else throw new RuntimeException();
+        } else throw new RuntimeException();
     }
 
     /**
@@ -153,7 +154,9 @@ public class Client {
         }
         System.out.println("Logged in!");
         user = loginPanel.getUsername();
-        connectServer(6666,"localhost",user);
+        if(!connectServer(6666, "localhost", user)){
+            return;
+        }
         initClientUI();
         addListeners();
     }
@@ -265,7 +268,7 @@ public class Client {
         });
     }
 
-    private void addUser(){
+    private void addUser() {
         String userName;
         try {
             userName = txtId.getText().trim();
@@ -281,14 +284,14 @@ public class Client {
                     return;
                 }
             }
-            ArrayList<Message> msgList;
-            msgList = new ArrayList<Message>(toCollection(API.pullMessageList(user,userName),Message.class));
-            msgList.sort((Message o1, Message o2)->{
+            List<Message> msgList;
+            msgList = (List<Message>) toCollection(API.pullMessageList(user, userName), MessageDB.class).stream().map(o -> new Message((MessageDB) o)).collect(Collectors.toList());
+            msgList.sort((Message o1, Message o2) -> {
                 Timestamp ts1 = Timestamp.valueOf(o1.getTime());
                 Timestamp ts2 = Timestamp.valueOf(o2.getTime());
-                if(ts1.before(ts2))
+                if (ts1.before(ts2))
                     return -1;
-                else if(ts1.after(ts2))
+                else if (ts1.after(ts2))
                     return 1;
                 else
                     return 0;
@@ -297,7 +300,7 @@ public class Client {
             chatListPanel.add(newTab);
             setActiveTab(newTab);
 
-            for(Message m :msgList){
+            for (Message m : msgList) {
                 newTab.messageList.add(m);
                 drawMessage(m);
             }
@@ -315,7 +318,7 @@ public class Client {
     }
 
     private synchronized void setActiveTab(UserTab tab) {
-        if(activeTab!=null)activeTab.text = textField.getText();
+        if (activeTab != null) activeTab.text = textField.getText();
         textArea.setText("");
         textField.setEnabled(true);
         btn_send.setEnabled(true);
@@ -330,6 +333,7 @@ public class Client {
 
     /**
      * The panel changes after a message has been received.
+     *
      *
      * @param message the message received.
      */
@@ -356,7 +360,7 @@ public class Client {
      * @param message The message sent.
      */
     private synchronized void messageSent(Message message) {
-        for (Component component: chatListPanel.getComponents()) {
+        for (Component component : chatListPanel.getComponents()) {
             UserTab tabUser = (UserTab) component;
             if (tabUser.user.equals(message.getReceiver())) {
                 updateMessage(tabUser, message);
@@ -373,7 +377,7 @@ public class Client {
      */
     private void updateMessage(UserTab tabUser, Message message) {
         tabUser.messageList.add(message);
-        tabUser.lastMessage.setText(message.getText().replaceAll("\\s+"," "));
+        tabUser.lastMessage.setText(message.getText().replaceAll("\\s+", " "));
         chatListPanel.remove(tabUser);
         chatListPanel.add(tabUser, 0);
         if (tabUser == activeTab) {
@@ -392,17 +396,17 @@ public class Client {
             JOptionPane.showMessageDialog(frame, "消息不能为空！", "错误", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        Message message = new Message(user,activeTab.user,Timestamp.from(Instant.now()).toString(),messageText);
+        Message message = new Message(user, activeTab.user, Timestamp.from(Instant.now()).toString(), messageText);
         try {
             try {
                 API.sendmsg(user, activeTab.user, messageText);
-            } catch (UserNotExistsException ex){
+            } catch (UserNotExistsException ex) {
                 throw new Exception("绘画对象不存在");
             }
 
-
+            sendMessageToServer(encoder.encodeToString(user.getBytes()) + "@" + encoder.encodeToString(activeTab.user.getBytes()) + "@" + encoder.encodeToString(messageText.getBytes()));
             messageSent(message);
-        }catch (Exception ex){
+        } catch (Exception ex) {
             JOptionPane.showMessageDialog(frame, ex.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
         }
 
@@ -410,7 +414,8 @@ public class Client {
     }
 
 
-    //TODO: 监听信息，并调用messageReceived(Message message)方法
+
+
     /**
      * Try to connect to server
      *
@@ -484,7 +489,7 @@ public class Client {
             return false;
         }
     }
-
+//TODO: 监听信息，并调用messageReceived(Message message)方法
     /**
      * Instance of this class will keep listening the message from server
      */
@@ -525,7 +530,7 @@ public class Client {
             while (true) {
                 try {
                     message = reader.readLine();
-                    StringTokenizer msgTokenizer = new StringTokenizer(message, "/@");
+                    StringTokenizer msgTokenizer = new StringTokenizer(message, "@");
                     String command = msgTokenizer.nextToken();
                     switch (command) {
                         case "CLOSE":
@@ -537,13 +542,13 @@ public class Client {
                                     && (userIp = msgTokenizer.nextToken()) != null) {
                                 user = new User(username, userIp);
                                 onlineUsers.put(username, user);
-                                userListModel.addElement(username);
+                                //userListModel.addElement(username);
                             }
                             break;
                         case "DELETE":
                             username = msgTokenizer.nextToken();
                             onlineUsers.remove(username);
-                            userListModel.removeElement(username);
+                            //userListModel.removeElement(username);
                             break;
                         case "USERLIST":
                             int size = Integer.parseInt(msgTokenizer.nextToken());
@@ -552,7 +557,7 @@ public class Client {
                                 userIp = msgTokenizer.nextToken();
                                 user = new User(username, userIp);
                                 onlineUsers.put(username, user);
-                                userListModel.addElement(username);
+                                //userListModel.addElement(username);
                             }
                             break;
                         case "MAX":
