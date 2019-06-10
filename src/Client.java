@@ -24,7 +24,6 @@ import static net.sf.json.JSONArray.toCollection;
  * @author 王潜
  */
 public class Client {
-
     private JFrame frame;
     private JTextArea textArea;
     private JTextField textField;
@@ -138,7 +137,7 @@ public class Client {
      * @param args will be ignored
      */
     public static void main(String[] args) {
-        new Client(true);
+        new Client(false);
     }
 
     private void startWithLogin() {
