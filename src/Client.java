@@ -10,12 +10,10 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
 
-import static net.sf.json.JSONArray.toArray;
 import static net.sf.json.JSONArray.toCollection;
 
 /**
@@ -46,6 +44,8 @@ public class Client {
     private MessageListenerThread messageListenerThread;// 负责接收消息的线程
     private Map<String, User> onlineUsers = new HashMap<>();// 所有在线用户
 
+    private Base64.Encoder encoder;
+    private Base64.Decoder decoder;
 
     private String user;
 
@@ -103,9 +103,9 @@ public class Client {
      * Start with login
      */
     private Client() {
+        encoder = Base64.getUrlEncoder();
+        decoder = Base64.getUrlDecoder();
         startWithLogin();
-        initClientUI();
-        addListeners();
     }
 
     /**
@@ -138,7 +138,7 @@ public class Client {
      * @param args will be ignored
      */
     public static void main(String[] args) {
-        new Client(true);
+        new Client();
     }
 
     private void startWithLogin() {
@@ -153,6 +153,7 @@ public class Client {
         }
         System.out.println("Logged in!");
         user = loginPanel.getUsername();
+        connectServer(6666,"localhost",user);
         initClientUI();
         addListeners();
     }
@@ -211,6 +212,8 @@ public class Client {
     private void initUserInputPanel() {
         textField = new JTextField();
         btn_send = new JButton("发送");
+        textField.setEnabled(false);
+        btn_send.setEnabled(false);
         userInputPanel = new JPanel(new BorderLayout());
         userInputPanel.add(textField, "Center");
         userInputPanel.add(btn_send, "East");
@@ -293,12 +296,13 @@ public class Client {
             UserTab newTab = new UserTab(userName);
             chatListPanel.add(newTab);
             setActiveTab(newTab);
-            chatListPanel.validate();
+
             for(Message m :msgList){
                 newTab.messageList.add(m);
                 drawMessage(m);
             }
             txtId.setText("");
+            frame.validate();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -313,6 +317,8 @@ public class Client {
     private synchronized void setActiveTab(UserTab tab) {
         if(activeTab!=null)activeTab.text = textField.getText();
         textArea.setText("");
+        textField.setEnabled(true);
+        btn_send.setEnabled(true);
         activeTab = tab;
         textField.setText(tab.text);
         frame.setTitle(user + " 与 " + tab.user + " 的聊天");
@@ -394,7 +400,7 @@ public class Client {
                 throw new Exception("绘画对象不存在");
             }
 
-            //TODO：广播与相关异常
+
             messageSent(message);
         }catch (Exception ex){
             JOptionPane.showMessageDialog(frame, ex.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
@@ -419,14 +425,14 @@ public class Client {
             writer = new PrintWriter(socket.getOutputStream());
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             // 发送客户端用户基本信息(用户名和ip地址)
-            sendMessageToServer(name + "@" + socket.getLocalAddress().toString());
+            sendMessageToServer(encoder.encodeToString(name.getBytes()) + "@" + socket.getLocalAddress().toString());
             // 开启接收消息的线程
             messageListenerThread = new MessageListenerThread(reader, textArea);
             messageListenerThread.start();
             isConnected = true;
             return true;
         } catch (Exception e) {
-            textArea.append("与端口号为：" + port + "    IP地址为：" + hostIp + "   的服务器连接失败!" + "\r\n");
+            System.out.println("与端口号为：" + port + "    IP地址为：" + hostIp + "   的服务器连接失败!" + "\r\n");
             isConnected = false;
             return false;
         }
@@ -514,9 +520,6 @@ public class Client {
          * Work entry
          */
         public void run() {
-        }
-        /*
-        public void run() {
             String message, username, userIp;
             User user;
             while (true) {
@@ -567,6 +570,6 @@ public class Client {
                     e.printStackTrace();
                 }
             }
-        }*/
+        }
     }
 }
