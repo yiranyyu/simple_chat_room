@@ -13,5 +13,5 @@ javac -encoding utf8 -cp "./src;$jar_path" -d out ./src/User.java ./src/UserDB.j
 java -cp "./out;$jar_path" Server
 
 # start client
-java -cp "./out;./src;$jar_path" Client
+java -cp "./out;$jar_path" Client
 ```

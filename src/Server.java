@@ -12,6 +12,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
+import java.net.SocketException;
 
 /**
  * Server program entry To start server: run <code>Server#main</code>
@@ -470,6 +471,9 @@ public class Server {
                     } else {
                         dispatcherMessage(message);
                     }
+                } catch(SocketException e){
+                    System.out.println("Socket Error! Client thread will be closed!");
+                    return;
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
