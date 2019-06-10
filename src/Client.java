@@ -385,7 +385,7 @@ public class Client {
      */
     private boolean connectServer(int port, String hostIp, String name) {
         try {
-            socket = new Socket(hostIp, port);z
+            socket = new Socket(hostIp, port);
             writer = new PrintWriter(socket.getOutputStream());
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             // 发送客户端用户基本信息(用户名和 ip 地址)
@@ -587,7 +587,7 @@ public class Client {
                             String time = new String(decoder.decode(msgTokenizer.nextToken()));
                             messageRecieved(new Message(sender,receiver,time,content));
                         default:
-                            System.out.println(message);
+                            textArea.append("\r\n" + message);
                     }
                 } catch (SocketException e) {
                     JOptionPane.showMessageDialog(frame, "网络状况异常，请检查并重新登录", "错误", JOptionPane.ERROR_MESSAGE);
