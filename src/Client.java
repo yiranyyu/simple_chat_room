@@ -360,7 +360,8 @@ public class Client {
         Message message = new Message(user, activeTab.user, Timestamp.from(Instant.now()).toString(), messageText);
         try {
             try {
-                sendMessageToServer(encoder.encodeToString(user.getBytes()) + "@" + encoder.encodeToString(activeTab.user.getBytes()) + "@" + encoder.encodeToString(messageText.getBytes()));
+                sendMessageToServer(encoder.encodeToString(user.getBytes()) + "@" + encoder.encodeToString(activeTab.user.getBytes())
+                        + "@" + encoder.encodeToString(messageText.getBytes())+"@"+encoder.encodeToString(message.getTime().getBytes()));
             }catch (NullPointerException ex){
                 ex.printStackTrace();
             }
@@ -388,7 +389,7 @@ public class Client {
             writer = new PrintWriter(socket.getOutputStream());
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             // 发送客户端用户基本信息(用户名和 ip 地址)
-            sendMessageToServer(name + "@" + socket.getLocalAddress().toString());
+            sendMessageToServer(encoder.encodeToString(name.getBytes()) + "@" + socket.getLocalAddress().toString());
             // 开启接收消息的线程
             messageListenerThread = new MessageListenerThread(reader, textArea);
             messageListenerThread.start();
@@ -578,9 +579,15 @@ public class Client {
                             closeConnectionPassively();
                             JOptionPane.showMessageDialog(frame, "服务器缓冲区已满！", "错误", JOptionPane.ERROR_MESSAGE);
                             return;
+                        case "MSG":
+                            System.out.println("msg received"+message);
+                            String sender = new String(decoder.decode( msgTokenizer.nextToken()));
+                            String receiver = new String(decoder.decode( msgTokenizer.nextToken()));
+                            String content = new String(decoder.decode(msgTokenizer.nextToken()));
+                            String time = new String(decoder.decode(msgTokenizer.nextToken()));
+                            messageRecieved(new Message(sender,receiver,time,content));
                         default:
-                            // System.out.println("#" + textArea);
-                            textArea.append(message + "\r\n");
+                            System.out.println(message);
                     }
                 } catch (SocketException e) {
                     JOptionPane.showMessageDialog(frame, "网络状况异常，请检查并重新登录", "错误", JOptionPane.ERROR_MESSAGE);

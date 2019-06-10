@@ -11,6 +11,7 @@ import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.StringTokenizer;
 import java.net.SocketException;
 
@@ -40,6 +41,8 @@ public class Server {
     private ServerSocket serverSocket;
     private ServerThread serverThread;
     private ArrayList<SingleClientThread> clientThreads;
+    private Base64.Encoder encoder = Base64.getUrlEncoder();
+    private Base64.Decoder decoder = Base64.getUrlDecoder();
 
     /**
      * Default constructor, start the server
@@ -402,7 +405,7 @@ public class Server {
                 // 接收客户端的基本用户信息
                 String clientInfo = reader.readLine();
                 StringTokenizer st = new StringTokenizer(clientInfo, "@");
-                user = new User(st.nextToken(), st.nextToken());
+                user = new User(new String(decoder.decode(st.nextToken())), st.nextToken());
                 // 反馈连接成功信息
                 writer.println(user.getName() + user.getIp() + "与服务器连接成功!");
                 writer.flush();
@@ -494,14 +497,14 @@ public class Server {
          */
         void dispatcherMessage(String message) {
             StringTokenizer stringTokenizer = new StringTokenizer(message, "@");
-            String source = stringTokenizer.nextToken();
-            String owner = stringTokenizer.nextToken();
-            String content = stringTokenizer.nextToken();
-            message = source + "说：" + content;
-            contentArea.append(message + "\r\n");
-            if (owner.equals("ALL")) {
-                for (int i = clientThreads.size() - 1; i >= 0; i--) {
-                    clientThreads.get(i).getWriter().println(message + "(多人发送)");
+            String source = new String(decoder.decode( stringTokenizer.nextToken()));
+            String owner = new String(decoder.decode(stringTokenizer.nextToken()));
+            String content = new String(decoder.decode(stringTokenizer.nextToken()));
+            String displayMsg = source +"对"+owner+"说：" + content;
+            contentArea.append( displayMsg  + "\r\n");
+            for (int i = clientThreads.size() - 1; i >= 0; i--) {
+                if(clientThreads.get(i).user.getName().equals(owner)) {
+                    clientThreads.get(i).getWriter().println("MSG@"+message);
                     clientThreads.get(i).getWriter().flush();
                 }
             }
