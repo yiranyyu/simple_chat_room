@@ -80,7 +80,7 @@ public class Client {
             messageSent(new Message("aaaa", "kkp", "we32rrr", "ert4eesjklnrwe"));
             messageSent(new Message("aaaa", "kkp", "we32rrr", "ert4eesklmnrwe"));
             txtId.setText("dddd");
-            addUser();
+            addUserTab();
             addListeners();
         } else
             throw new RuntimeException();
@@ -138,7 +138,7 @@ public class Client {
         txtId = new JTextField();
         btnAdd = new JButton("添加");
         AddUserPanel = new JPanel(new GridLayout(1, 3));
-        AddUserPanel.add(new JLabel("用户id"));
+        AddUserPanel.add(new JLabel("用户名"));
         AddUserPanel.add(txtId);
         AddUserPanel.add(btnAdd);
         AddUserPanel.setBorder(new TitledBorder("添加聊天对象"));
@@ -214,8 +214,8 @@ public class Client {
         btn_send.addActionListener(e -> sendMessage());
 
         // 添加用户
-        btnAdd.addActionListener(e -> addUser());
-        txtId.addActionListener(e -> addUser());
+        btnAdd.addActionListener(e -> addUserTab());
+        txtId.addActionListener(e -> addUserTab());
 
         // 关闭窗口时事件
         frame.addWindowListener(new WindowAdapter() {
@@ -228,7 +228,7 @@ public class Client {
         });
     }
 
-    private void addUser() {
+    private void addUserTab() {
         String userName;
         try {
             userName = txtId.getText().trim();
@@ -244,32 +244,34 @@ public class Client {
                     return;
                 }
             }
-            List<Message> msgList;
-            msgList = (List<Message>) toCollection(API.pullMessageList(user, userName), MessageDB.class).stream()
-                    .map(o -> new Message((MessageDB) o)).collect(Collectors.toList());
-            msgList.sort((Message o1, Message o2) -> {
-                Timestamp ts1 = Timestamp.valueOf(o1.getTime());
-                Timestamp ts2 = Timestamp.valueOf(o2.getTime());
-                if (ts1.before(ts2))
-                    return -1;
-                else if (ts1.after(ts2))
-                    return 1;
-                else
-                    return 0;
-            });
-            UserTab newTab = new UserTab(userName);
-            chatListPanel.add(newTab);
-            setActiveTab(newTab);
-
-            for (Message m : msgList) {
-                newTab.messageList.add(m);
-                drawMessage(m);
-            }
+            setActiveTab(addDialogue(userName));
             txtId.setText("");
-            frame.validate();
         } catch (Exception ex) {
             ex.printStackTrace();
         }
+    }
+
+    private UserTab addDialogue(String userName){
+
+        List<Message> msgList;
+        msgList = (List<Message>) toCollection(API.pullMessageList(user, userName), MessageDB.class).stream()
+                .map(o -> new Message((MessageDB) o)).collect(Collectors.toList());
+        msgList.sort((Message o1, Message o2) -> {
+            Timestamp ts1 = Timestamp.valueOf(o1.getTime());
+            Timestamp ts2 = Timestamp.valueOf(o2.getTime());
+            if (ts1.before(ts2))
+                return -1;
+            else if (ts1.after(ts2))
+                return 1;
+            else
+                return 0;
+        });
+        UserTab newTab = new UserTab(userName);
+        chatListPanel.add(newTab);
+        newTab.messageList.addAll(msgList);
+        if(msgList.size()>0)newTab.lastMessage.setText(msgList.get(msgList.size()-1).getText());
+        frame.validate();
+        return newTab;
     }
 
     private synchronized void drawMessage(Message message) {
@@ -308,10 +310,11 @@ public class Client {
                     return;
                 }
             }
-            UserTab tabUser = new UserTab(message.getSender());
-            tabUser.messageList.add(message);
-            tabUser.lastMessage.setText(message.getText());
+            UserTab tabUser = addDialogue(message.getSender());
             chatListPanel.add(tabUser, 0);
+            if(activeTab==null){
+                setActiveTab(tabUser);
+            }
         }
     }
 
@@ -499,9 +502,6 @@ public class Client {
             });
         }
     }
-
-    // TODO: 监听信息，并调用messageReceived(Message message)方法
-
     /**
      * Instance of this class will keep listening the message from server
      */
@@ -586,6 +586,7 @@ public class Client {
                             String content = new String(decoder.decode(msgTokenizer.nextToken()));
                             String time = new String(decoder.decode(msgTokenizer.nextToken()));
                             messageRecieved(new Message(sender,receiver,time,content));
+                            break;
                         default:
                             textArea.append("\r\n" + message);
                     }
