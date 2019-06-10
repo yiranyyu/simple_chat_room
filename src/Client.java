@@ -587,7 +587,7 @@ public class Client {
                             String time = new String(decoder.decode(msgTokenizer.nextToken()));
                             messageRecieved(new Message(sender,receiver,time,content));
                         default:
-                            System.out.println(message);
+                            textArea.append("\r\n" + message);
                     }
                 } catch (SocketException e) {
                     JOptionPane.showMessageDialog(frame, "网络状况异常，请检查并重新登录", "错误", JOptionPane.ERROR_MESSAGE);
