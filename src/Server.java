@@ -411,7 +411,7 @@ public class Server {
                     StringBuilder sb = new StringBuilder();
                     for (int i = clientThreads.size() - 1; i >= 0; i--) {
                         sb.append(clientThreads.get(i).getUser().getName());
-                        sb.append('/');
+                        sb.append('@');
                         sb.append(clientThreads.get(i).getUser().getIp());
                         sb.append("@");
                     }
@@ -420,7 +420,7 @@ public class Server {
                 }
                 // 向所有在线用户发送该用户上线命令
                 for (int i = clientThreads.size() - 1; i >= 0; i--) {
-                    clientThreads.get(i).getWriter().println("ADD@" + user.getName() + user.getIp());
+                    clientThreads.get(i).getWriter().println("ADD@" + user.getName() + "@" + user.getIp());
                     clientThreads.get(i).getWriter().flush();
                 }
             } catch (IOException e) {

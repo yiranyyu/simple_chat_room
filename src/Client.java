@@ -351,7 +351,7 @@ public class Client {
      * Sent current input to all users
      */
     private void sendMessage() {
-
+        // System.out.println("Send Messag");
         String messageText = textField.getText().trim();
         if (messageText.equals("")) {
             JOptionPane.showMessageDialog(frame, "消息不能为空！", "错误", JOptionPane.ERROR_MESSAGE);
@@ -579,7 +579,7 @@ public class Client {
                             JOptionPane.showMessageDialog(frame, "服务器缓冲区已满！", "错误", JOptionPane.ERROR_MESSAGE);
                             return;
                         default:
-                            System.out.println("#" + textArea);
+                            // System.out.println("#" + textArea);
                             textArea.append(message + "\r\n");
                     }
                 } catch (SocketException e) {
