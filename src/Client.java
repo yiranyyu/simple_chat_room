@@ -114,24 +114,6 @@ public class Client {
      *
      * @param debug should not work when false
      */
-    private Client(boolean debug) {
-        if (debug) {
-            user = "aaaa";
-            initClientUI();
-            UserTab tab1 = new UserTab("gkd");
-            UserTab tab2 = new UserTab("kkp");
-            chatListPanel.add(tab1);
-            chatListPanel.add(tab2);
-            messageRecieved(new Message("gkd", "aaaa", "2222rrr", "2133124e2"));
-            messageRecieved(new Message("kkp", "aaaa", "we32rrr", "ert4eesrijuhwe"));
-            messageRecieved(new Message("kkp", "yghu", "we32rrr", "eriopkjiot4e"));
-            messageSent(new Message("aaaa", "kkp", "we32rrr", "ert4eesjklnrwe"));
-            messageSent(new Message("aaaa", "kkp", "we32rrr", "ert4eesklmnrwe"));
-            txtId.setText("dddd");
-            addUser();
-            addListeners();
-        } else throw new RuntimeException();
-    }
 
     /**
      * Program start entry
@@ -399,14 +381,14 @@ public class Client {
         Message message = new Message(user, activeTab.user, Timestamp.from(Instant.now()).toString(), messageText);
         try {
             try {
-                API.sendmsg(user, activeTab.user, messageText);
-            } catch (UserNotExistsException ex) {
-                throw new Exception("绘画对象不存在");
+                sendMessageToServer(encoder.encodeToString(user.getBytes()) + "@" + encoder.encodeToString(activeTab.user.getBytes()) + "@" + encoder.encodeToString(messageText.getBytes()));
+            }catch (NullPointerException ex){
+                ex.printStackTrace();
             }
-
-            sendMessageToServer(encoder.encodeToString(user.getBytes()) + "@" + encoder.encodeToString(activeTab.user.getBytes()) + "@" + encoder.encodeToString(messageText.getBytes()));
+            API.sendmsg(user, activeTab.user, messageText,message.getTime());
             messageSent(message);
         } catch (Exception ex) {
+            ex.printStackTrace();
             JOptionPane.showMessageDialog(frame, ex.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
         }
 

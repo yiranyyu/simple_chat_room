@@ -22,9 +22,9 @@ public class API {
         psql.SignUp(username, password);
     }
 
-    public static void sendmsg(String sendername, String receivername, String content)
+    public static void sendmsg(String sendername, String receivername, String content,String time)
             throws UserNotExistsException {
-        psql.SendMsg(sendername, receivername, content);
+        psql.SendMsg(sendername, receivername, content,time);
     }
 }
 

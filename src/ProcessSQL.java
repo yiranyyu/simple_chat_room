@@ -155,7 +155,7 @@ public class ProcessSQL {
      * @return boolean.
      * @throws UserNotExistsException On username not exist error.
      */
-    public boolean SendMsg(String sendername, String receivername, String content)
+    public boolean SendMsg(String sendername, String receivername, String content,String time)
             throws UserNotExistsException {
         int senderid = this.findIdByusername(sendername);
         int receiverid = this.findIdByusername(receivername);
@@ -165,13 +165,14 @@ public class ProcessSQL {
             throw new UserNotExistsException(receivername);
 
         try {
-            String sql = String.format("insert into Msg(sender,receiver,content,time) Values(%d,%d,'%s','%s')", senderid, receiverid, content, new Date());
+            String sql = String.format("insert into Msg(sender,receiver,content,time) Values(%d,%d,'%s','%s')", senderid, receiverid, content, time);
             int rs = stmt.executeUpdate(sql);
             if (rs > 0)
                 return true;
             else
                 return false;
         } catch (SQLException e) {
+            e.printStackTrace();
         }
         return true;
     }

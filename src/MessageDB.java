@@ -11,6 +11,10 @@ public class MessageDB {
     private String time;
     private String text;
 
+    public MessageDB(){
+
+    }
+
     public MessageDB(int id, int senderid, int receiverid, String time, String text) {
         this.id = id;
         this.senderid = senderid;
