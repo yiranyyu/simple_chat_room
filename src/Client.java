@@ -10,20 +10,21 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
-import static net.sf.json.JSONArray.toArray;
 import static net.sf.json.JSONArray.toCollection;
 
 /**
  * Client entry class To start client: run Client#main
  *
- * @author 王潜
+ * @author 王潜, 余天予
  */
 public class Client {
+    private static final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
     private JFrame frame;
     private JTextArea textArea;
     private JTextField textField;
@@ -49,86 +50,37 @@ public class Client {
     private String user;
 
     /**
-     * The tabs on classes
-     */
-    private class UserTab extends JPanel {
-        String user;
-        ArrayList<Message> messageList;
-        String text;
-        JLabel lastMessage;
-
-        UserTab(String user) {
-            super(new GridLayout(3, 1));
-            JLabel userLabel = new JLabel(user);
-            userLabel.setFont(userLabel.getFont().deriveFont(26.5f));
-            super.add(userLabel);
-            messageList = new ArrayList<>();
-            lastMessage = new JLabel();
-            super.add(lastMessage);
-            super.add(new JSeparator());
-            this.user = user;
-            text = "";
-
-            addListeners();
-        }
-
-        private void addListeners() {
-            super.addMouseListener(new MouseListener() {
-                @Override
-                public synchronized void mouseClicked(MouseEvent e) {
-                    setActiveTab(UserTab.this);
-                }
-
-                @Override
-                public void mousePressed(MouseEvent e) {
-                }
-
-                @Override
-                public void mouseReleased(MouseEvent e) {
-                }
-
-                @Override
-                public void mouseEntered(MouseEvent e) {
-                }
-
-                @Override
-                public void mouseExited(MouseEvent e) {
-                }
-            });
-        }
-    }
-
-    /**
      * Start with login
      */
     private Client() {
         startWithLogin();
-        initClientUI();
-        addListeners();
     }
 
     /**
-     *Used to debug
+     * Used to debug
+     *
      * @param debug should not work when false
      */
-    private Client(boolean debug){
-        if(debug){
+    private Client(boolean debug) {
+        if (debug) {
             user = "aaaa";
             initClientUI();
             UserTab tab1 = new UserTab("gkd");
             UserTab tab2 = new UserTab("kkp");
             chatListPanel.add(tab1);
             chatListPanel.add(tab2);
-            messageRecieved(new Message("gkd","aaaa","2222rrr","2133124e2"));
-            messageRecieved(new Message("kkp","aaaa","we32rrr","ert4eesrijuhwe"));
-            messageRecieved(new Message("kkp","yghu","we32rrr","eriopkjiot4e"));
-            messageSent(new Message("aaaa","kkp","we32rrr","ert4eesjklnrwe"));
-            messageSent(new Message("aaaa","kkp","we32rrr","ert4eesklmnrwe"));
+            messageReceived(new Message("gkd", "aaaa", "2222rrr", "2133124e2"));
+            messageReceived(new Message("kkp", "aaaa", "we32rrr", "ert4eesrijuhwe"));
+            messageReceived(new Message("kkp", "yghu", "we32rrr", "eriopkjiot4e"));
+            messageSent(new Message("aaaa", "kkp", "we32rrr", "ert4eesjklnrwe"));
+            messageSent(new Message("aaaa", "kkp", "we32rrr", "ert4eesklmnrwe"));
             txtId.setText("dddd");
             addUser();
             addListeners();
+        } else {
+            throw new RuntimeException("Not implemented yet!");
         }
-        else throw new RuntimeException();
+
     }
 
     /**
@@ -137,7 +89,8 @@ public class Client {
      * @param args will be ignored
      */
     public static void main(String[] args) {
-        new Client(false);
+        new Client(true);
+//        new Client();
     }
 
     private void startWithLogin() {
@@ -220,23 +173,26 @@ public class Client {
      * Draw the client main Frame
      */
     private void initClientFrame() {
-        JSplitPane eastSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, dialogueScroll, userInputPanel);
-        eastSplit.setDividerLocation(672);
-        JSplitPane westSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, chatListScroll, AddUserPanel);
-        westSplit.setDividerLocation(672);
-        JSplitPane centerSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, westSplit, eastSplit);
-        centerSplit.setDividerLocation(256);
+        double scale = 0.7;
+        int width = (int) (screenSize.width * scale);
+        int height = (int) (screenSize.height * scale);
+        int verticalSplit = (int) (height * 0.8);
+        int horizontalSplit = (int) (width * 0.2);
 
-        int screen_width = Toolkit.getDefaultToolkit().getScreenSize().width;
-        int screen_height = Toolkit.getDefaultToolkit().getScreenSize().height;
+        JSplitPane eastSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, dialogueScroll, userInputPanel);
+        eastSplit.setDividerLocation(verticalSplit);
+        JSplitPane westSplit = new JSplitPane(JSplitPane.VERTICAL_SPLIT, chatListScroll, AddUserPanel);
+        westSplit.setDividerLocation(verticalSplit);
+        JSplitPane centerSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, westSplit, eastSplit);
+        centerSplit.setDividerLocation(horizontalSplit);
+
         frame = new JFrame(user + "的聊天");
         frame.setLayout(new BorderLayout());
         frame.add(centerSplit, "Center");
-        frame.setSize(1024, 768);
-        frame.setLocation((screen_width - frame.getWidth()) / 2, (screen_height - frame.getHeight()) / 2);
+        frame.setSize(width, height);
+        frame.setLocation((screenSize.width - frame.getWidth()) / 2, (screenSize.height - frame.getHeight()) / 2);
         frame.setVisible(true);
     }
-
 
     /**
      * Add listeners to the window and components in ti.
@@ -261,7 +217,7 @@ public class Client {
         });
     }
 
-    private void addUser(){
+    private void addUser() {
         String userName;
         try {
             userName = txtId.getText().trim();
@@ -278,13 +234,13 @@ public class Client {
                 }
             }
             ArrayList<Message> msgList;
-            msgList = new ArrayList<Message>(toCollection(API.pullMessageList(user,userName),Message.class));
-            msgList.sort((Message o1, Message o2)->{
+            msgList = new ArrayList<Message>(toCollection(API.pullMessageList(user, userName), Message.class));
+            msgList.sort((Message o1, Message o2) -> {
                 Timestamp ts1 = Timestamp.valueOf(o1.getTime());
                 Timestamp ts2 = Timestamp.valueOf(o2.getTime());
-                if(ts1.before(ts2))
+                if (ts1.before(ts2))
                     return -1;
-                else if(ts1.after(ts2))
+                else if (ts1.after(ts2))
                     return 1;
                 else
                     return 0;
@@ -293,7 +249,7 @@ public class Client {
             chatListPanel.add(newTab);
             setActiveTab(newTab);
             chatListPanel.validate();
-            for(Message m :msgList){
+            for (Message m : msgList) {
                 newTab.messageList.add(m);
                 drawMessage(m);
             }
@@ -310,7 +266,7 @@ public class Client {
     }
 
     private synchronized void setActiveTab(UserTab tab) {
-        if(activeTab!=null)activeTab.text = textField.getText();
+        if (activeTab != null) activeTab.text = textField.getText();
         textArea.setText("");
         activeTab = tab;
         textField.setText(tab.text);
@@ -327,7 +283,7 @@ public class Client {
      * @param message the message received.
      */
 
-    private synchronized void messageRecieved(Message message) {
+    private synchronized void messageReceived(Message message) {
         if (user.equals(message.getReceiver())) {
             for (Component component : chatListPanel.getComponents()) {
                 UserTab tabUser = (UserTab) component;
@@ -349,7 +305,7 @@ public class Client {
      * @param message The message sent.
      */
     private synchronized void messageSent(Message message) {
-        for (Component component: chatListPanel.getComponents()) {
+        for (Component component : chatListPanel.getComponents()) {
             UserTab tabUser = (UserTab) component;
             if (tabUser.user.equals(message.getReceiver())) {
                 updateMessage(tabUser, message);
@@ -366,7 +322,7 @@ public class Client {
      */
     private void updateMessage(UserTab tabUser, Message message) {
         tabUser.messageList.add(message);
-        tabUser.lastMessage.setText(message.getText().replaceAll("\\s+"," "));
+        tabUser.lastMessage.setText(message.getText().replaceAll("\\s+", " "));
         chatListPanel.remove(tabUser);
         chatListPanel.add(tabUser, 0);
         if (tabUser == activeTab) {
@@ -385,25 +341,23 @@ public class Client {
             JOptionPane.showMessageDialog(frame, "消息不能为空！", "错误", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        Message message = new Message(user,activeTab.user,Timestamp.from(Instant.now()).toString(),messageText);
+        Message message = new Message(user, activeTab.user, Timestamp.from(Instant.now()).toString(), messageText);
         try {
             try {
                 API.sendmsg(user, activeTab.user, messageText);
-            } catch (UserNotExistsException ex){
+            } catch (UserNotExistsException ex) {
                 throw new Exception("绘画对象不存在");
             }
 
             //TODO：广播与相关异常
             messageSent(message);
-        }catch (Exception ex){
+        } catch (Exception ex) {
             JOptionPane.showMessageDialog(frame, ex.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
         }
 
         textField.setText(null);
     }
 
-
-    //TODO: 监听信息，并调用messageReceived(Message message)方法
     /**
      * Try to connect to server
      *
@@ -430,6 +384,9 @@ public class Client {
             return false;
         }
     }
+
+
+    //TODO: 监听信息，并调用messageReceived(Message message)方法
 
     /**
      * Send message to server
@@ -475,6 +432,56 @@ public class Client {
             e1.printStackTrace();
             isConnected = true;
             return false;
+        }
+    }
+
+    /**
+     * The tabs on classes
+     */
+    private class UserTab extends JPanel {
+        String user;
+        ArrayList<Message> messageList;
+        String text;
+        JLabel lastMessage;
+
+        UserTab(String user) {
+            super(new GridLayout(3, 1));
+            JLabel userLabel = new JLabel(user);
+            userLabel.setFont(userLabel.getFont().deriveFont(26.5f));
+            super.add(userLabel);
+            messageList = new ArrayList<>();
+            lastMessage = new JLabel();
+            super.add(lastMessage);
+            super.add(new JSeparator());
+            this.user = user;
+            text = "";
+
+            addListeners();
+        }
+
+        private void addListeners() {
+            super.addMouseListener(new MouseListener() {
+                @Override
+                public synchronized void mouseClicked(MouseEvent e) {
+                    setActiveTab(UserTab.this);
+                }
+
+                @Override
+                public void mousePressed(MouseEvent e) {
+                }
+
+                @Override
+                public void mouseReleased(MouseEvent e) {
+                }
+
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                }
+            });
         }
     }
 

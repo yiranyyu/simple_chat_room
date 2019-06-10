@@ -7,14 +7,15 @@ import java.awt.*;
  * @author 余天予
  */
 public class LoginPanel extends JPanel {
-    static final int WIDTH = 300;
-    static final int HEIGHT = 150;
+    private static final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
     private static final long serialVersionUID = 1L;
+    private static final int WIDTH = (int) (screenSize.width / 4.2);
+    private static final int HEIGHT = WIDTH / 2;
     private JFrame frame;
     private JTextField usernameField = new JTextField(15);
     private JTextField passwordField = new JTextField(15);
     private JButton loginButton = new JButton("登录");
-    private JButton signupButton = new JButton("注册");
+    private JButton signUpButton = new JButton("注册");
     private GridBagConstraints constraints = new GridBagConstraints();
     private String username;
     private String password;
@@ -58,7 +59,7 @@ public class LoginPanel extends JPanel {
         add(new JLabel("用户名"), constraints, 0, 1, 1, 1);
         add(new JLabel("密 码"), constraints, 0, 2, 1, 1);
         add(loginButton, constraints, 0, 3, 1, 1);
-        add(signupButton, constraints, 2, 3, 1, 1);
+        add(signUpButton, constraints, 2, 3, 1, 1);
         add(usernameField, constraints, 2, 1, 1, 1);
         add(passwordField, constraints, 2, 2, 1, 1);
     }
@@ -141,7 +142,7 @@ public class LoginPanel extends JPanel {
                 LoginPanel.this.setEnabled(false);
             }
         });
-        signupButton.addActionListener(e -> {
+        signUpButton.addActionListener(e -> {
             if (signUp()) {
                 frame.dispose();
                 LoginPanel.this.setEnabled(false);
