@@ -385,7 +385,7 @@ public class Client {
      */
     private boolean connectServer(int port, String hostIp, String name) {
         try {
-            socket = new Socket(hostIp, port);// 根据端口号和服务器ip建立连接
+            socket = new Socket(hostIp, port);z
             writer = new PrintWriter(socket.getOutputStream());
             reader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
             // 发送客户端用户基本信息(用户名和 ip 地址)
