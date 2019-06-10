@@ -42,6 +42,7 @@ public class ProcessSQL {
      * @return boolean.
      */
     public boolean ContainsName(String username) {
+		username = this.FormatString(username);
         boolean flag = true;
         try {
             String sql = String.format("SELECT * FROM User WHERE username = '%s'", username);
@@ -111,6 +112,8 @@ public class ProcessSQL {
      */
     public JSONArray Login(String username, String password)
             throws UserNotExistsException, PasswordErrorException {
+		username = this.FormatString(username);
+		password = this.FormatString(password);
         try {
             String sql = String.format("SELECT password from User WHERE username='%s'", username);
             ResultSet rs = stmt.executeQuery(sql);
@@ -157,6 +160,7 @@ public class ProcessSQL {
      */
     public boolean SendMsg(String sendername, String receivername, String content,String time)
             throws UserNotExistsException {
+		content = this.FormatString(content);
         int senderid = this.findIdByusername(sendername);
         int receiverid = this.findIdByusername(receivername);
         if (senderid == -1)
@@ -164,6 +168,8 @@ public class ProcessSQL {
         if (receiverid == -1)
             throw new UserNotExistsException(receivername);
 
+        System.out.println(content);
+        System.out.println(time);
         try {
             String sql = String.format("insert into Msg(sender,receiver,content,time) Values(%d,%d,'%s','%s')", senderid, receiverid, content, time);
             int rs = stmt.executeUpdate(sql);
@@ -184,6 +190,7 @@ public class ProcessSQL {
      * @return int userid of a user -1 means not exist.
      */
     private int findIdByusername(String username) {
+		username = this.FormatString(username);
         if (username == null)
             return -1;
         try {
@@ -199,7 +206,7 @@ public class ProcessSQL {
     }
 
     /**
-     * This method finds Id by username in database
+     * This method finds Username by Id in database
      *
      * @param id id of user.
      * @return String username of a user null means not exist.
@@ -227,6 +234,8 @@ public class ProcessSQL {
      * @return boolean.
      */
     private boolean InsertUser(String username, String password) {
+		username = this.FormatString(username);
+		password = this.FormatString(password);
         try {
             String sql = String.format("insert into User(username,password) Values('%s','%s')", username, password);
             int rs = stmt.executeUpdate(sql);
@@ -238,6 +247,21 @@ public class ProcessSQL {
         }
         return true;
     }
+	
+    /**
+     * This method format a String
+     *
+     * @param str A String.
+     * @return Nothing.
+     */
+	private String FormatString(String str) {
+		if(str == null)
+			return null;
+		String temp = str.replaceAll("\\\\", "\\\\\\\\");
+		temp = temp.replaceAll("'", "\\\\\'");
+		temp = temp.replaceAll("\"", "\\\\\"");
+		return temp;
+	}
 
     /**
      * This method closes the connection to the databasae
