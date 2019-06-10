@@ -56,12 +56,12 @@ public class LoginPanel extends JPanel {
      */
     private void initLayout() {
         add(new JLabel("登录 / 注册"), constraints, 0, 0, 1, 1);
-        add(new JLabel("用户名"), constraints, 0, 1, 1, 1);
-        add(new JLabel("密 码"), constraints, 0, 2, 1, 1);
-        add(loginButton, constraints, 0, 3, 1, 1);
-        add(signUpButton, constraints, 2, 3, 1, 1);
-        add(usernameField, constraints, 2, 1, 1, 1);
-        add(passwordField, constraints, 2, 2, 1, 1);
+        add(new JLabel("用户名"), constraints, 1, 0, 1, 1);
+        add(usernameField, constraints, 1, 1, 1, 2);
+        add(new JLabel("密 码"), constraints, 2, 0, 1, 1);
+        add(passwordField, constraints, 2, 1, 1, 2);
+        add(loginButton, constraints, 3, 0, 1, 1);
+        add(signUpButton, constraints, 3, 2, 1, 1);
     }
 
     /**
@@ -93,15 +93,14 @@ public class LoginPanel extends JPanel {
 
     /**
      * Add component to panel
-     *
-     * @param c           the component to be added
+     *  @param c           the component to be added
      * @param constraints layout constraints
-     * @param x           x index
      * @param y           y index
-     * @param w           width
+     * @param x           x index
      * @param h           height
+     * @param w           width
      */
-    private void add(Component c, GridBagConstraints constraints, int x, int y, int w, int h) {
+    private void add(Component c, GridBagConstraints constraints, int y, int x, int h, int w) {
         constraints.gridx = x;
         constraints.gridy = y;
         constraints.gridwidth = w;
