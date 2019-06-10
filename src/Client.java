@@ -254,11 +254,11 @@ public class Client {
      * Add listeners to the window and components in ti.
      */
     private void addListeners() {
-        // 写消息的文本框中按回车键时事件
+        // 发送消息
         textField.addActionListener(arg0 -> sendMessage());
-        // 单击发送按钮时事件
         btn_send.addActionListener(e -> sendMessage());
-        //
+
+        // 添加用户
         btnAdd.addActionListener(e -> addUser());
         txtId.addActionListener(e -> addUser());
 
@@ -406,7 +406,7 @@ public class Client {
             try {
                 API.sendmsg(user, activeTab.user, messageText);
             } catch (UserNotExistsException ex) {
-                throw new Exception("绘画对象不存在");
+                throw new Exception("会话对象不存在");
             }
 
             sendMessageToServer(encoder.encodeToString(user.getBytes()) + "@" + encoder.encodeToString(activeTab.user.getBytes()) + "@" + encoder.encodeToString(messageText.getBytes()));
@@ -442,7 +442,7 @@ public class Client {
             isConnected = true;
             return true;
         } catch (Exception e) {
-            System.out.println("与端口号为：" + port + "    IP地址为：" + hostIp + "   的服务器连接失败!" + "\r\n");
+            JOptionPane.showMessageDialog(frame, "与端口号为：" + port + "    IP地址为：" + hostIp + " 的服务器连接失败! 请检查您的配置", "错误", JOptionPane.ERROR_MESSAGE);
             isConnected = false;
             return false;
         }
@@ -537,6 +537,7 @@ public class Client {
                     message = reader.readLine();
                     StringTokenizer msgTokenizer = new StringTokenizer(message, "@");
                     String command = msgTokenizer.nextToken();
+                    System.out.println("Get token=" + command);
                     switch (command) {
                         case "CLOSE":
                             textArea.append("服务器已关闭!\r\n");
