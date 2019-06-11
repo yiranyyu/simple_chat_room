@@ -318,7 +318,7 @@ public class Server {
      */
     private void sendServerMessageToAllUsersImpl(String message) {
         for (int i = clientThreads.size() - 1; i >= 0; i--) {
-            clientThreads.get(i).getWriter().println("服务器：" + message + "(多人发送)");
+            clientThreads.get(i).getWriter().println("服务器：" + message + "(多人发送)\n");
             clientThreads.get(i).getWriter().flush();
         }
     }
