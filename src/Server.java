@@ -421,7 +421,7 @@ public class Server {
                 }
                 // 向所有在线用户发送该用户上线命令
                 for (int i = clientThreads.size() - 1; i >= 0; i--) {
-                    clientThreads.get(i).getWriter().println("ADD@" + user.getName() + "@" + user.getIp());
+                    clientThreads.get(i).getWriter().println("ADD@" + encoder.encodeToString(user.getName().getBytes()) + "@" + user.getIp());
                     clientThreads.get(i).getWriter().flush();
                 }
             } catch (IOException e) {
@@ -446,7 +446,7 @@ public class Server {
             while (true) {
                 try {
                     message = reader.readLine(); // 接收客户端消息
-                    if (message.equals("CLOSE")) // 下线命令
+                    if (message != null && message.equals("CLOSE")) // 下线命令
                     {
                         contentArea.append(this.getUser().getName() + this.getUser().getIp() + "下线!\r\n");
                         // 断开连接释放资源
@@ -456,7 +456,7 @@ public class Server {
 
                         // 向所有在线用户发送该用户的下线命令
                         for (int i = clientThreads.size() - 1; i >= 0; i--) {
-                            clientThreads.get(i).getWriter().println("DELETE@" + user.getName());
+                            clientThreads.get(i).getWriter().println("DELETE@" + encoder.encodeToString(user.getName().getBytes()));
                             clientThreads.get(i).getWriter().flush();
                         }
 
