@@ -45,7 +45,7 @@ public class Client {
     private PrintWriter writer;
     private BufferedReader reader;
     private MessageListenerThread messageListenerThread;// 负责接收消息的线程
-    private Map<String, User> onlineUsers = new HashMap<>();// 所有在线用户
+    private Set<String> onlineUsers = new HashSet<>();// 所有在线用户
 
     private Base64.Encoder encoder;
     private Base64.Decoder decoder;
@@ -461,12 +461,22 @@ public class Client {
         ArrayList<Message> messageList;
         String text;
         JLabel lastMessage;
+        JLabel onlineTag;
 
         UserTab(String user) {
             super(new GridLayout(3, 1));
             JLabel userLabel = new JLabel(user);
             userLabel.setFont(userLabel.getFont().deriveFont(26.5f));
-            super.add(userLabel);
+
+            onlineTag = new JLabel("离线");
+            onlineTag.setForeground(Color.BLACK);
+            if(onlineUsers.contains(user)){
+                setOnline();
+            }
+            JPanel upPane = new JPanel(new BorderLayout());
+            upPane.add(userLabel,BorderLayout.LINE_START);
+            upPane.add(onlineTag,BorderLayout.LINE_END);
+            super.add(upPane);
             messageList = new ArrayList<>();
             lastMessage = new JLabel();
             super.add(lastMessage);
@@ -475,6 +485,16 @@ public class Client {
             text = "";
 
             addListeners();
+        }
+
+        void setOnline(){
+            onlineTag.setForeground(Color.GREEN);
+            onlineTag.setText("在线");
+        }
+
+        void setOffline(){
+            onlineTag.setForeground(Color.BLACK);
+            onlineTag.setText("离线");
         }
 
         private void addListeners() {
@@ -537,8 +557,7 @@ public class Client {
          * Work entry
          */
         public void run() {
-            String message, username, userIp;
-            User user;
+            String message, username;
             while (true) {
                 try {
                     message = reader.readLine();
@@ -552,26 +571,38 @@ public class Client {
                             closeConnectionPassively();
                             return;
                         case "ADD":
-                            if ((username = msgTokenizer.nextToken()) != null
-                                    && (userIp = msgTokenizer.nextToken()) != null) {
-                                user = new User(username, userIp);
-                                onlineUsers.put(username, user);
-                                // userListModel.addElement(username);
+                            if ((username = msgTokenizer.nextToken()) != null) {
+                                onlineUsers.add(new String(decoder.decode(username)));
+                                for (Component component : chatListPanel.getComponents()) {
+                                    UserTab tabUser = (UserTab) component;
+                                    if (tabUser.user.equals(username)) {
+                                        tabUser.setOnline();
+                                    }
+                                }
                             }
                             break;
                         case "DELETE":
-                            username = msgTokenizer.nextToken();
+                            username = new String(decoder.decode(msgTokenizer.nextToken()));
                             onlineUsers.remove(username);
-                            // userListModel.removeElement(username);
+                            for (Component component : chatListPanel.getComponents()) {
+                                UserTab tabUser = (UserTab) component;
+                                if (tabUser.user.equals(username)) {
+                                    tabUser.setOffline();
+                                }
+                            }
                             break;
                         case "USERLIST":
+                            System.out.println(message);
                             int size = Integer.parseInt(msgTokenizer.nextToken());
                             for (int i = 0; i < size; i++) {
-                                username = msgTokenizer.nextToken();
-                                userIp = msgTokenizer.nextToken();
-                                user = new User(username, userIp);
-                                onlineUsers.put(username, user);
-                                // userListModel.addElement(username);
+                                username = new String(decoder.decode(msgTokenizer.nextToken()));
+                                onlineUsers.add(username);
+                            }
+                            for (Component component : chatListPanel.getComponents()) {
+                                UserTab tabUser = (UserTab) component;
+                                if (onlineUsers.contains(tabUser.user)) {
+                                    tabUser.setOnline();
+                                }
                             }
                             break;
                         case "MAX":

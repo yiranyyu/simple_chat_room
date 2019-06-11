@@ -262,7 +262,7 @@ public class Server {
             isStart = true;
         } catch (BindException e) {
             isStart = false;
-            throw new BindException(String.format("% 端口已被占用", port));
+            throw new BindException(String.format("%d 端口已被占用", port));
         } catch (Exception e1) {
             e1.printStackTrace();
             isStart = false;
@@ -413,10 +413,8 @@ public class Server {
                 if (clientThreads.size() > 0) {
                     StringBuilder sb = new StringBuilder();
                     for (int i = clientThreads.size() - 1; i >= 0; i--) {
-                        sb.append(clientThreads.get(i).getUser().getName());
+                        sb.append(encoder.encodeToString(clientThreads.get(i).getUser().getName().getBytes()));
                         sb.append('@');
-                        sb.append(clientThreads.get(i).getUser().getIp());
-                        sb.append("@");
                     }
                     writer.println("USERLIST@" + clientThreads.size() + "@" + sb.toString());
                     writer.flush();
