@@ -12,7 +12,7 @@ import java.util.Date;
 
 public class ProcessSQL {
     private static final String JDBC_DRIVER = "com.mysql.jdbc.Driver";
-    private static final String DB_URL = "jdbc:mysql://39.105.80.32/ChatDB";
+    private static final String DB_URL = "jdbc:mysql://39.105.80.32/ChatDB?characterEncoding=utf-8";
     private static final String USER = "root";
     private static final String PASS = "123456Abc!hhh";
     private Connection conn = null;
@@ -172,6 +172,7 @@ public class ProcessSQL {
         System.out.println(time);
         try {
             String sql = String.format("insert into Msg(sender,receiver,content,time) Values(%d,%d,'%s','%s')", senderid, receiverid, content, time);
+            System.out.println(sql);
             int rs = stmt.executeUpdate(sql);
             if (rs > 0)
                 return true;
@@ -247,7 +248,7 @@ public class ProcessSQL {
         }
         return true;
     }
-	
+
     /**
      * This method format a String
      *

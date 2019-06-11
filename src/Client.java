@@ -268,6 +268,9 @@ public class Client {
             else
                 return 0;
         });
+        for(Message m:msgList){
+            System.out.println(m.getText());
+        }
         UserTab newTab = new UserTab(userName);
         chatListPanel.add(newTab);
         newTab.messageList.addAll(msgList);
