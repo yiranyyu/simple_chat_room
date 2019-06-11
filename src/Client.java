@@ -362,13 +362,13 @@ public class Client {
         }
         Message message = new Message(user, activeTab.user, Timestamp.from(Instant.now()).toString(), messageText);
         try {
+            API.sendmsg(user, activeTab.user, messageText,message.getTime());
             try {
                 sendMessageToServer(encoder.encodeToString(user.getBytes()) + "@" + encoder.encodeToString(activeTab.user.getBytes())
                         + "@" + encoder.encodeToString(messageText.getBytes())+"@"+encoder.encodeToString(message.getTime().getBytes()));
             }catch (NullPointerException ex){
                 ex.printStackTrace();
             }
-            API.sendmsg(user, activeTab.user, messageText,message.getTime());
             messageSent(message);
         } catch (Exception ex) {
             ex.printStackTrace();
