@@ -118,7 +118,6 @@ public class Client {
 
             return;
         }
-        showUI();
         addListeners();
     }
 
@@ -201,7 +200,7 @@ public class Client {
         JSplitPane centerSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, westSplit, eastSplit);
         centerSplit.setDividerLocation(horizontalSplit);
 
-        frame = new JFrame("["+user + "]的聊天");
+        frame = new JFrame("[" + user + "]的聊天");
         frame.setLayout(new BorderLayout());
         frame.add(centerSplit, "Center");
         frame.setSize(width, height);
@@ -254,7 +253,7 @@ public class Client {
         }
     }
 
-    private UserTab addDialogue(String userName){
+    private UserTab addDialogue(String userName) {
 
         List<Message> msgList;
         msgList = (List<Message>) toCollection(API.pullMessageList(user, userName), MessageDB.class).stream()
@@ -272,7 +271,8 @@ public class Client {
         UserTab newTab = new UserTab(userName);
         chatListPanel.add(newTab);
         newTab.messageList.addAll(msgList);
-        if(msgList.size()>0)newTab.lastMessage.setText(msgList.get(msgList.size()-1).getText());
+        if (msgList.size() > 0)
+            newTab.lastMessage.setText(msgList.get(msgList.size() - 1).getText());
         frame.validate();
         return newTab;
     }
@@ -291,7 +291,7 @@ public class Client {
         btn_send.setEnabled(true);
         activeTab = tab;
         textField.setText(tab.text);
-        frame.setTitle("["+user + "]与[" + tab.user + "]的聊天");
+        frame.setTitle("[" + user + "]与[" + tab.user + "]的聊天");
         for (Message message : tab.messageList) {
             drawMessage(message);
         }
@@ -315,7 +315,7 @@ public class Client {
             }
             UserTab tabUser = addDialogue(message.getSender());
             chatListPanel.add(tabUser, 0);
-            if(activeTab==null){
+            if (activeTab == null) {
                 setActiveTab(tabUser);
             }
         }
@@ -365,11 +365,13 @@ public class Client {
         }
         Message message = new Message(user, activeTab.user, Timestamp.from(Instant.now()).toString(), messageText);
         try {
-            API.sendmsg(user, activeTab.user, messageText,message.getTime());
+            API.sendmsg(user, activeTab.user, messageText, message.getTime());
             try {
-                sendMessageToServer(encoder.encodeToString(user.getBytes()) + "@" + encoder.encodeToString(activeTab.user.getBytes())
-                        + "@" + encoder.encodeToString(messageText.getBytes())+"@"+encoder.encodeToString(message.getTime().getBytes()));
-            }catch (NullPointerException ex){
+                sendMessageToServer(encoder.encodeToString(user.getBytes()) + "@"
+                        + encoder.encodeToString(activeTab.user.getBytes()) + "@"
+                        + encoder.encodeToString(messageText.getBytes()) + "@"
+                        + encoder.encodeToString(message.getTime().getBytes()));
+            } catch (NullPointerException ex) {
                 ex.printStackTrace();
             }
             messageSent(message);
@@ -474,12 +476,12 @@ public class Client {
 
             onlineTag = new JLabel("离线");
             onlineTag.setForeground(Color.BLACK);
-            if(onlineUsers.contains(user)){
+            if (onlineUsers.contains(user)) {
                 setOnline();
             }
             JPanel upPane = new JPanel(new BorderLayout());
-            upPane.add(userLabel,BorderLayout.LINE_START);
-            upPane.add(onlineTag,BorderLayout.LINE_END);
+            upPane.add(userLabel, BorderLayout.LINE_START);
+            upPane.add(onlineTag, BorderLayout.LINE_END);
             super.add(upPane);
             messageList = new ArrayList<>();
             lastMessage = new JLabel();
@@ -491,12 +493,12 @@ public class Client {
             addListeners();
         }
 
-        void setOnline(){
+        void setOnline() {
             onlineTag.setForeground(Color.GREEN);
             onlineTag.setText("在线");
         }
 
-        void setOffline(){
+        void setOffline() {
             onlineTag.setForeground(Color.BLACK);
             onlineTag.setText("离线");
         }
@@ -526,6 +528,7 @@ public class Client {
             });
         }
     }
+
     /**
      * Instance of this class will keep listening the message from server
      */
@@ -569,67 +572,68 @@ public class Client {
                     String command = msgTokenizer.nextToken();
                     System.out.println("Get command=#" + command + "#");
                     switch (command) {
-                        case "CLOSE":
-                            textArea.append("服务器已关闭!\r\n");
-                            closeConnectionPassively();
-                            return;
-                        case "ADD":
-                            if ((username = msgTokenizer.nextToken()) != null) {
-                                onlineUsers.add(new String(decoder.decode(username)));
-                                for (Component component : chatListPanel.getComponents()) {
-                                    UserTab tabUser = (UserTab) component;
-                                    if (tabUser.user.equals(username)) {
-                                        tabUser.setOnline();
-                                    }
-                                }
-                            }
-                            break;
-                        case "DELETE":
-                            username = new String(decoder.decode(msgTokenizer.nextToken()));
-                            onlineUsers.remove(username);
+                    case "CLOSE":
+                        textArea.append("服务器已关闭!\r\n");
+                        closeConnectionPassively();
+                        return;
+                    case "ADD":
+                        if ((username = msgTokenizer.nextToken()) != null) {
+                            onlineUsers.add(new String(decoder.decode(username)));
                             for (Component component : chatListPanel.getComponents()) {
                                 UserTab tabUser = (UserTab) component;
                                 if (tabUser.user.equals(username)) {
-                                    tabUser.setOffline();
-                                }
-                            }
-                            break;
-                        case "USERLIST":
-                            System.out.println(message);
-                            int size = Integer.parseInt(msgTokenizer.nextToken());
-                            for (int i = 0; i < size; i++) {
-                                username = new String(decoder.decode(msgTokenizer.nextToken()));
-                                onlineUsers.add(username);
-                            }
-                            if(onlineUsers.contains(user)){
-                                closeConnectionPassively();
-                                JOptionPane.showMessageDialog(frame, "用户已登录", "错误", JOptionPane.ERROR_MESSAGE);
-                                System.exit(1);
-                            }
-                            onlineUsers.add(user);
-                            for (Component component : chatListPanel.getComponents()) {
-                                UserTab tabUser = (UserTab) component;
-                                if (onlineUsers.contains(tabUser.user)) {
                                     tabUser.setOnline();
                                 }
                             }
-                            break;
-                        case "MAX":
-
+                        }
+                        break;
+                    case "DELETE":
+                        username = new String(decoder.decode(msgTokenizer.nextToken()));
+                        onlineUsers.remove(username);
+                        for (Component component : chatListPanel.getComponents()) {
+                            UserTab tabUser = (UserTab) component;
+                            if (tabUser.user.equals(username)) {
+                                tabUser.setOffline();
+                            }
+                        }
+                        break;
+                    case "USERLIST":
+                        System.out.println(message);
+                        int size = Integer.parseInt(msgTokenizer.nextToken());
+                        for (int i = 0; i < size; i++) {
+                            username = new String(decoder.decode(msgTokenizer.nextToken()));
+                            onlineUsers.add(username);
+                        }
+                        if (onlineUsers.contains(user)) {
                             closeConnectionPassively();
-                            JOptionPane.showMessageDialog(frame, "服务器缓冲区已满！", "错误", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(frame, "用户已登录", "错误", JOptionPane.ERROR_MESSAGE);
                             System.exit(1);
-                            return;
-                        case "MSG":
-                            System.out.println("msg received"+message);
-                            String sender = new String(decoder.decode( msgTokenizer.nextToken()));
-                            String receiver = new String(decoder.decode( msgTokenizer.nextToken()));
-                            String content = new String(decoder.decode(msgTokenizer.nextToken()));
-                            String time = new String(decoder.decode(msgTokenizer.nextToken()));
-                            messageRecieved(new Message(sender,receiver,time,content));
-                            break;
-                        default:
-                            textArea.append("\r\n" + message);
+                        }
+                        showUI();
+                        onlineUsers.add(user);
+                        for (Component component : chatListPanel.getComponents()) {
+                            UserTab tabUser = (UserTab) component;
+                            if (onlineUsers.contains(tabUser.user)) {
+                                tabUser.setOnline();
+                            }
+                        }
+                        break;
+                    case "MAX":
+
+                        closeConnectionPassively();
+                        JOptionPane.showMessageDialog(frame, "服务器缓冲区已满！", "错误", JOptionPane.ERROR_MESSAGE);
+                        System.exit(1);
+                        return;
+                    case "MSG":
+                        System.out.println("msg received" + message);
+                        String sender = new String(decoder.decode(msgTokenizer.nextToken()));
+                        String receiver = new String(decoder.decode(msgTokenizer.nextToken()));
+                        String content = new String(decoder.decode(msgTokenizer.nextToken()));
+                        String time = new String(decoder.decode(msgTokenizer.nextToken()));
+                        messageRecieved(new Message(sender, receiver, time, content));
+                        break;
+                    default:
+                        textArea.append("\r\n" + message);
                     }
                 } catch (SocketException e) {
                     JOptionPane.showMessageDialog(frame, "网络状况异常，请检查并重新登录", "错误", JOptionPane.ERROR_MESSAGE);

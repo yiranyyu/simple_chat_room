@@ -9,8 +9,8 @@ import java.awt.*;
 public class LoginPanel extends JPanel {
     private static final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
     private static final long serialVersionUID = 1L;
-    private static final int WIDTH = 600;
-    private static final int HEIGHT = 300;
+    private static final int WIDTH = 400;
+    private static final int HEIGHT = 200;
     private JFrame frame;
     private JTextField usernameField = new JTextField(15);
     private JTextField passwordField = new JPasswordField(15);
