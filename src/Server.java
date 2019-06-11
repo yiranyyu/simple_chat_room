@@ -410,7 +410,7 @@ public class Server {
                 writer.println(user.getName() + user.getIp() + "与服务器连接成功!");
                 writer.flush();
                 // 反馈当前在线用户信息
-                if (clientThreads.size() > 0) {
+                if (clientThreads.size() >= 0) {
                     StringBuilder sb = new StringBuilder();
                     for (int i = clientThreads.size() - 1; i >= 0; i--) {
                         sb.append(encoder.encodeToString(clientThreads.get(i).getUser().getName().getBytes()));

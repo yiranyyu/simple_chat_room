@@ -598,7 +598,7 @@ public class Client {
                         }
                         break;
                     case "USERLIST":
-                        System.out.println(message);
+                        System.out.println("MESSAGE" + message);
                         int size = Integer.parseInt(msgTokenizer.nextToken());
                         for (int i = 0; i < size; i++) {
                             username = new String(decoder.decode(msgTokenizer.nextToken()));
@@ -609,6 +609,7 @@ public class Client {
                             JOptionPane.showMessageDialog(frame, "用户已登录", "错误", JOptionPane.ERROR_MESSAGE);
                             System.exit(1);
                         }
+                        System.out.println("EE");
                         showUI();
                         onlineUsers.add(user);
                         for (Component component : chatListPanel.getComponents()) {
