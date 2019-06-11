@@ -199,7 +199,7 @@ public class Client {
         JSplitPane centerSplit = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, westSplit, eastSplit);
         centerSplit.setDividerLocation(horizontalSplit);
 
-        frame = new JFrame(user + "的聊天");
+        frame = new JFrame("["+user + "]的聊天");
         frame.setLayout(new BorderLayout());
         frame.add(centerSplit, "Center");
         frame.setSize(width, height);
@@ -289,7 +289,7 @@ public class Client {
         btn_send.setEnabled(true);
         activeTab = tab;
         textField.setText(tab.text);
-        frame.setTitle(user + " 与 " + tab.user + " 的聊天");
+        frame.setTitle("["+user + "]与[" + tab.user + "]的聊天");
         for (Message message : tab.messageList) {
             drawMessage(message);
         }
