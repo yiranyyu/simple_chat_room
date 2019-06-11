@@ -113,6 +113,7 @@ public class Client {
         user = loginPanel.getUsername();
         initClientUI();
         if (!connectServer(6666, "localhost", user)) {
+
             return;
         }
         showUI();
@@ -401,6 +402,7 @@ public class Client {
         } catch (Exception e) {
             JOptionPane.showMessageDialog(frame, "与端口号为：" + port + "    IP地址为：" + hostIp + " 的服务器连接失败! 请检查您的配置", "错误",
                     JOptionPane.ERROR_MESSAGE);
+            System.exit(1);
             isConnected = false;
             return false;
         }
@@ -598,6 +600,11 @@ public class Client {
                                 username = new String(decoder.decode(msgTokenizer.nextToken()));
                                 onlineUsers.add(username);
                             }
+                            if(onlineUsers.contains(user)){
+                                JOptionPane.showMessageDialog(frame, "用户已登录", "错误", JOptionPane.ERROR_MESSAGE);
+                                System.exit(1);
+                            }
+                            onlineUsers.add(user);
                             for (Component component : chatListPanel.getComponents()) {
                                 UserTab tabUser = (UserTab) component;
                                 if (onlineUsers.contains(tabUser.user)) {
@@ -609,6 +616,7 @@ public class Client {
                             textArea.append(msgTokenizer.nextToken() + msgTokenizer.nextToken() + "\r\n");
                             closeConnectionPassively();
                             JOptionPane.showMessageDialog(frame, "服务器缓冲区已满！", "错误", JOptionPane.ERROR_MESSAGE);
+                            System.exit(1);
                             return;
                         case "MSG":
                             System.out.println("msg received"+message);
