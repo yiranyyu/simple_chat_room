@@ -9,16 +9,20 @@ import java.awt.*;
 public class LoginPanel extends JPanel {
     private static final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
     private static final long serialVersionUID = 1L;
-    private static final int WIDTH = 300;
-    private static final int HEIGHT = 150;
+    private static final int WIDTH = 600;
+    private static final int HEIGHT = 300;
     private JFrame frame;
     private JTextField usernameField = new JTextField(15);
     private JTextField passwordField = new JPasswordField(15);
+    private JTextField ipField = new JTextField(15);
+    private JTextField portField = new JTextField(15);
     private JButton loginButton = new JButton("登录");
     private JButton signUpButton = new JButton("注册");
     private GridBagConstraints constraints = new GridBagConstraints();
     private String username;
     private String password;
+    private String ip;
+    private int port;
 
     /**
      * Construct one login panel
@@ -48,7 +52,7 @@ public class LoginPanel extends JPanel {
         constraints.fill = GridBagConstraints.NONE;
         constraints.anchor = GridBagConstraints.EAST;
         constraints.weightx = 3;
-        constraints.weighty = 4;
+        constraints.weighty = 6;
     }
 
     /**
@@ -60,9 +64,15 @@ public class LoginPanel extends JPanel {
         add(new JLabel("用户名"), constraints, 1, 0, 1, 1);
         add(usernameField, constraints, 1, 1, 1, 2);
         add(new JLabel("密 码"), constraints, 2, 0, 1, 1);
+        add(new JLabel("服务器"), constraints, 3, 0, 1, 1);
+        add(new JLabel("端 口"), constraints, 4, 0, 1, 1);
         add(passwordField, constraints, 2, 1, 1, 2);
-        add(loginButton, constraints, 3, 0, 1, 1);
-        add(signUpButton, constraints, 3, 2, 1, 1);
+        add(ipField, constraints, 3, 1, 1, 2);
+        add(portField, constraints, 4, 1, 1, 2);
+        ipField.setText("localhost");
+        portField.setText("6666");
+        add(loginButton, constraints, 5, 0, 1, 1);
+        add(signUpButton, constraints, 5, 2, 1, 1);
     }
 
     /**
@@ -158,10 +168,19 @@ public class LoginPanel extends JPanel {
     private boolean login() {
         username = usernameField.getText().trim();
         password = passwordField.getText().trim();
+        ip = ipField.getText().trim();
+
         try {
+            port = Integer.parseInt(portField.getText().trim());
+            if(port<0 || port>65536){
+                throw new NumberFormatException("");
+            }
             API.login(username, password);
             return true;
-        } catch (UserNotExistsException e) {
+        }catch (NumberFormatException ex){
+            JOptionPane.showMessageDialog(this, "端口地址不正确");
+        }
+        catch (UserNotExistsException e) {
             JOptionPane.showMessageDialog(this, e.getMessage());
         } catch (PasswordErrorException e) {
             JOptionPane.showMessageDialog(this, e.getMessage());
@@ -192,11 +211,18 @@ public class LoginPanel extends JPanel {
      * Return the logged in username or the registered username
      *
      * @return username
+     * @return username
      */
     String getUsername() {
         return username;
     }
+    String getIp() {
+        return ip;
+    }
 
+    int getPort(){
+        return port;
+    }
     /**
      * Return password of logged in user or the registered user
      *

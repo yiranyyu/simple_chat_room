@@ -111,8 +111,10 @@ public class Client {
         }
         System.out.println("Logged in!");
         user = loginPanel.getUsername();
+        String ip = loginPanel.getIp();
+        int port = loginPanel.getPort();
         initClientUI();
-        if (!connectServer(6666, "localhost", user)) {
+        if (!connectServer(port, ip, user)) {
 
             return;
         }
@@ -550,7 +552,6 @@ public class Client {
          */
         synchronized void closeConnectionPassively() throws Exception {
             // 清空用户列表
-            // userListModel.removeAllElements();
             // 被动的关闭连接释放资源
             releaseResource();
         }
@@ -601,6 +602,7 @@ public class Client {
                                 onlineUsers.add(username);
                             }
                             if(onlineUsers.contains(user)){
+                                closeConnectionPassively();
                                 JOptionPane.showMessageDialog(frame, "用户已登录", "错误", JOptionPane.ERROR_MESSAGE);
                                 System.exit(1);
                             }
@@ -613,7 +615,7 @@ public class Client {
                             }
                             break;
                         case "MAX":
-                            textArea.append(msgTokenizer.nextToken() + msgTokenizer.nextToken() + "\r\n");
+
                             closeConnectionPassively();
                             JOptionPane.showMessageDialog(frame, "服务器缓冲区已满！", "错误", JOptionPane.ERROR_MESSAGE);
                             System.exit(1);
