@@ -581,7 +581,7 @@ public class Client {
                             onlineUsers.add(new String(decoder.decode(username)));
                             for (Component component : chatListPanel.getComponents()) {
                                 UserTab tabUser = (UserTab) component;
-                                if (tabUser.user.equals(username)) {
+                                if (tabUser.user.equals(new String(decoder.decode(username)))) {
                                     tabUser.setOnline();
                                 }
                             }
