@@ -13,7 +13,7 @@ public class LoginPanel extends JPanel {
     private static final int HEIGHT = 150;
     private JFrame frame;
     private JTextField usernameField = new JTextField(15);
-    private JTextField passwordField = new JTextField(15);
+    private JTextField passwordField = new JPasswordField(15);
     private JButton loginButton = new JButton("登录");
     private JButton signUpButton = new JButton("注册");
     private GridBagConstraints constraints = new GridBagConstraints();
